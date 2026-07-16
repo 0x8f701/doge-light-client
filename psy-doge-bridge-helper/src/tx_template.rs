@@ -40,7 +40,7 @@ use doge_light_client::{
 const OP_PUSHBYTES_2: u8 = 0x02;
 const OP_PUSHBYTES_32: u8 = 0x20;
 const OP_PUSHBYTES_33: u8 = 0x21;
-const OP_2DROP: u8 = 0x6b;
+const OP_2DROP: u8 = 0x6d;
 const OP_DROP: u8 = 117;
 const OP_DUP: u8 = 118;
 const OP_EQUALVERIFY: u8 = 136;
@@ -276,7 +276,7 @@ mod manager_custody_tests {
         assert_eq!(&script[310..], &[0x57, OP_CHECKMULTISIG]);
         assert_eq!(
             get_manager_custody_output_script(&config, &RECIPIENT_ATA),
-            hex_literal::hex!("a914e82fee979cd3f155a2a073040936e98ce807a47e87")
+            hex_literal::hex!("a914bee8ec8e5af600ebf6758250245136955ef23a1987")
         );
         assert_eq!(
             get_manager_custody_output_script(&config, &RECIPIENT_ATA),

@@ -51,21 +51,21 @@ fn num_bits_u256_be_and_high_u32(x: [u8; 32]) -> (usize, u32) {
     if bits == 0 {
         (0, 0)
     } else {
-        let h_u32 = if first_non_zero_ind < 28 {
+        let h_u32 = if first_non_zero_ind + 4 <= 32 {
             u32::from_be_bytes([
                 x[first_non_zero_ind],
                 x[first_non_zero_ind + 1],
                 x[first_non_zero_ind + 2],
                 x[first_non_zero_ind + 3],
             ])
-        } else if first_non_zero_ind < 29 {
+        } else if first_non_zero_ind + 3 <= 32 {
             u32::from_be_bytes([
                 0,
                 x[first_non_zero_ind],
                 x[first_non_zero_ind + 1],
                 x[first_non_zero_ind + 2],
             ])
-        } else if first_non_zero_ind < 30 {
+        } else if first_non_zero_ind + 2 <= 32 {
             u32::from_be_bytes([0, 0, x[first_non_zero_ind], x[first_non_zero_ind + 1]])
         } else {
             u32::from_be_bytes([0, 0, 0, x[first_non_zero_ind]])
@@ -195,8 +195,12 @@ impl BTCDifficulty {
         if n_size <= 3 {
             n_compact = high_u32 << 8 * (3 - n_size);
         } else {
-            n_compact >>= 8;
+            // Bitcoin Core GetCompact: take the top 3 bytes of the value
+            // (high_u32 holds the top 4 bytes; shifting right by 8 drops the
+            // least-significant of those four, leaving the top 3 bytes).
+            n_compact = high_u32 >> 8;
         }
+        n_compact &= 0x00ffffff;
         // The 0x00800000 bit denotes the sign.
         // Thus, if it is already set, divide the mantissa by 256 and increase the exponent.
         if (n_compact & DIFFICULTY_NEGATIVE_FLAG) != 0 {
@@ -464,47 +468,131 @@ mod test {
         Ok(())
     }
 
-    /// B10: for hashes with n_size > 3, `new_from_hash` never assigns `high_u32`
-    /// into `n_compact` — it only does `n_compact >>= 8` on a zero, so the
-    /// significand is always 0.
+    /// B10 (fixed): `new_from_hash` previously zeroed the compact significand for
+    /// any hash whose byte-length (`n_size`) exceeded 3, because the `else` arm
+    /// only did `n_compact >>= 8` on an already-zero value and never read
+    /// `high_u32`. After the fix it follows Bitcoin Core `GetCompact`: it takes
+    /// the top 3 bytes of the value (`high_u32 >> 8`) and applies sign-bit
+    /// normalization. These tests pin the corrected behaviour against reference
+    /// vectors computed from Bitcoin Core's `GetCompact`.
     #[test]
-    fn b10_new_from_hash_zeroes_compact_when_n_size_gt_3() {
+    fn b10_new_from_hash_all_ones_not_zero() {
+        // all-ones hash: bits=256, n_size=32, top 3 bytes = 0xffffff.
+        // 0xffffff has the sign bit (0x00800000) set, so Core shifts right by 8
+        // (significand -> 0xffff) and bumps the exponent to 33 -> 0x2100ffff.
         let all_ones = [0xffu8; 32];
         let d = BTCDifficulty::new_from_hash(all_ones);
         assert!(
-            d.is_zero(),
-            "B10 nail: all-ones hash collides to zero difficulty; compact={:#010x} exp={} sig={:#x}",
+            !d.is_zero(),
+            "B10 regression: all-ones hash collapsed to zero difficulty; compact={:#010x}",
+            d.0
+        );
+        assert_eq!(
             d.0,
-            d.get_exponent(),
-            d.get_significand()
+            0x2100ffff,
+            "all-ones compact must match Bitcoin Core GetCompact (0x2100ffff); got {:#010x}",
+            d.0
         );
-
-        let mut h = [0u8; 32];
-        h[0] = 0x01;
-        let d2 = BTCDifficulty::new_from_hash(h);
-        assert!(
-            d2.is_zero(),
-            "B10 nail: leading-0x01 hash collides to zero; compact={:#010x}",
-            d2.0
-        );
-
-        // Sanity: a very small hash (only lowest 2 bytes set) uses n_size<=3 path
-        // and should produce a non-zero significand if high_u32 is used.
-        let mut small = [0u8; 32];
-        small[30] = 0x12;
-        small[31] = 0x34;
-        let d3 = BTCDifficulty::new_from_hash(small);
-        // n_size for ~16 bits is 2 or 3; path assigns high_u32 — not forced zero by the bug
-        assert!(
-            !d3.is_zero() || d3.get_exponent() > 0,
-            "small-hash path should not hit the n_size>3 zeroing bug; compact={:#010x}",
-            d3.0
-        );
+        assert_eq!(d.get_exponent(), 0x21);
+        assert_eq!(d.get_significand(), 0xffff);
+        assert!(!d.is_negative());
     }
 
-    /// B10 consequence via the real PoW gate: all-ones hash must be rejected.
     #[test]
-    fn b10_check_proof_of_work_must_reject_all_ones() {
+    fn b10_new_from_hash_zero_hash_is_zero() {
+        // The zero hash maps to compact 0 (the hardest possible target). This
+        // must remain zero after the fix; it must not regress into a non-zero
+        // significand via the n_size>3 path.
+        let d = BTCDifficulty::new_from_hash([0u8; 32]);
+        assert!(d.is_zero(), "zero hash must be zero difficulty; compact={:#010x}", d.0);
+        assert_eq!(d.0, 0x00000000);
+    }
+
+    /// Reference vectors for `new_from_hash` against Bitcoin Core `GetCompact`.
+    /// Each hash is a big-endian 32-byte array holding only the low `n` bytes.
+    fn make_hash(low_bytes: &[u8]) -> [u8; 32] {
+        let mut h = [0u8; 32];
+        let n = low_bytes.len();
+        h[32 - n..].copy_from_slice(low_bytes);
+        h
+    }
+
+    #[test]
+    fn b10_new_from_hash_matches_bitcoin_core_reference_vectors() {
+        // (low_bytes, expected compact). Compact computed by Bitcoin Core
+        // GetCompact for the 256-bit big-endian value formed by `low_bytes`.
+        let cases: &[(&[u8], u32)] = &[
+            // 1-byte value 0x12: n_size=1, sig = 0x12<<16 = 0x120000.
+            (&[0x12u8], 0x01120000),
+            // 1-byte value 0xff (top bit set): sign-shift -> sig 0xff00, exp 2.
+            (&[0xffu8], 0x0200ff00),
+            // 2-byte value 0x1234: n_size=2, sig = 0x1234<<8 = 0x123400.
+            (&[0x12u8, 0x34], 0x02123400),
+            // 3-byte value 0x123456: n_size=3, sig = 0x123456 (no shift).
+            (&[0x12u8, 0x34, 0x56], 0x03123456),
+            // 3-byte value 0x80ff00 (top bit set): sign-shift -> sig 0x80ff, exp 4.
+            (&[0x80u8, 0xff, 0x00], 0x040080ff),
+            // 4-byte value 0x12345678: n_size=4, top 3 bytes = 0x123456.
+            (&[0x12u8, 0x34, 0x56, 0x78], 0x04123456),
+            // 4-byte value 0xffffffff (top bit set after >>8): sig 0xffffff ->
+            //   sign-shift -> sig 0xffff, exp 5.
+            (&[0xffu8, 0xff, 0xff, 0xff], 0x0500ffff),
+            // 5-byte value 0xff_ffffffff: n_size=5, top3 = 0xffffff -> sign-shift
+            //   -> sig 0xffff, exp 6.
+            (&[0xffu8, 0xff, 0xff, 0xff, 0xff], 0x0600ffff),
+            // Dogecoin mainnet/testnet pow_limit hash
+            // "00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+            // (bytes: 00 00 0f ff ... ff): n_size=30, top3=0x0fffff -> 0x1e0fffff.
+            (
+                &hex_literal::hex!("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+                0x1e0fffff,
+            ),
+            // all-ones (256 bits): n_size=32, top3=0xffffff -> sign-shift
+            //   -> sig 0xffff, exp 33 -> 0x2100ffff.
+            (&[0xffu8; 32], 0x2100ffff),
+        ];
+
+        for (i, (bytes, expected)) in cases.iter().enumerate() {
+            let h = if bytes.len() == 32 {
+                let mut arr = [0u8; 32];
+                arr.copy_from_slice(bytes);
+                arr
+            } else {
+                make_hash(bytes)
+            };
+            let d = BTCDifficulty::new_from_hash(h);
+            assert_eq!(
+                d.0, *expected,
+                "vec[{}]: bytes={:02x?} expected compact {:#010x} got {:#010x}",
+                i, bytes, expected, d.0,
+            );
+        }
+    }
+
+    #[test]
+    fn b10_new_from_hash_sign_bit_normalization() {
+        // A significand whose high byte sets the 0x00800000 sign bit must be
+        // renormalized by shifting right 8 and incrementing the exponent, never
+        // by leaving the sign bit set in the stored compact.
+        let mut h = [0u8; 32];
+        h[29] = 0x80;
+        h[30] = 0xff;
+        h[31] = 0x00;
+        let d = BTCDifficulty::new_from_hash(h);
+        assert_eq!(d.0, 0x040080ff, "sign-bit normalization vec; got {:#010x}", d.0);
+        assert!(
+            !d.is_negative(),
+            "a positive hash must never be flagged negative; compact={:#010x}",
+            d.0
+        );
+        // The high byte of the significand must not retain the sign bit.
+        assert_eq!(d.get_significand() & 0xff0000, 0x008000 & 0xff0000);
+    }
+
+    /// B10 consequence via the real PoW gate: all-ones hash must be rejected
+    /// against the Dogecoin mainnet difficulty at height ~145001.
+    #[test]
+    fn b10_check_proof_of_work_must_reject_all_ones_mainnet() {
         use crate::constants::DogeMainNetConfig;
         use crate::logic::check_doge_block_seq::check_proof_of_work;
 
@@ -513,7 +601,40 @@ mod test {
         let accepted = check_proof_of_work::<DogeMainNetConfig>(all_ones, n_bits);
         assert!(
             !accepted,
-            "B10 nail: all-ones PoW hash ACCEPTED against n_bits={:#x} (consensus bypass)",
+            "all-ones PoW hash ACCEPTED against mainnet n_bits={:#x} (consensus bypass)",
+            n_bits
+        );
+    }
+
+    /// Same B10 nail against `DogeTestNetConfig` (the E2E network profile): the
+    /// all-ones hash must be rejected against the testnet min-difficulty target.
+    #[test]
+    fn b10_check_proof_of_work_must_reject_all_ones_testnet() {
+        use crate::constants::{DogeNetworkConfig, DogeTestNetConfig};
+        use crate::logic::check_doge_block_seq::check_proof_of_work;
+
+        // testnet pow_limit = 504365055 = 0x1e0fffff (same as mainnet).
+        let n_bits: u32 = DogeTestNetConfig::NETWORK_PARAMS.pow_limit;
+        assert_eq!(n_bits, 0x1e0fffff, "testnet pow_limit sanity");
+        let all_ones = [0xffu8; 32];
+        let accepted = check_proof_of_work::<DogeTestNetConfig>(all_ones, n_bits);
+        assert!(
+            !accepted,
+            "all-ones PoW hash ACCEPTED against testnet pow_limit={:#x} (consensus bypass)",
+            n_bits
+        );
+        // Sanity: a hash strictly below the testnet pow_limit target is accepted.
+        // pow_limit compact = 0x1e0fffff -> target = 0x0fffff << 216 (~2^236).
+        // `check_proof_of_work` reverses the little-endian input before reading
+        // it as a big-endian uint256, so to build a *small* big-endian value the
+        // least-significant byte must sit at input index 0. value 0x42 is far
+        // below the target and must be accepted by the PoW gate.
+        let mut easy = [0u8; 32];
+        easy[0] = 0x42;
+        let accepted_easy = check_proof_of_work::<DogeTestNetConfig>(easy, n_bits);
+        assert!(
+            accepted_easy,
+            "easy hash (value 0x42) below testnet pow_limit target was REJECTED; pow_limit={:#x}",
             n_bits
         );
     }
