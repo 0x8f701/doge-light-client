@@ -1,4 +1,7 @@
-use doge_light_client::{common_types::{QHash160, QHash256}, hash::traits::DogeHashProvider};
+use doge_light_client::{
+    common_types::{QHash160, QHash256},
+    hash::traits::DogeHashProvider,
+};
 
 #[derive(PartialEq, Clone, Copy, Debug)]
 pub struct PsyCompressedSecp256K1Signature {

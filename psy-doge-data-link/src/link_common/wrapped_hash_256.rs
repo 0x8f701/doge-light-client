@@ -3,7 +3,6 @@ use hex::FromHexError;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 
-
 #[serde_as]
 #[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Debug, Eq, Hash, PartialOrd, Ord)]
 pub struct WrappedHash256(#[serde_as(as = "serde_with::hex::Hex")] pub [u8; 32]);
@@ -12,7 +11,6 @@ impl Default for WrappedHash256 {
         Self([0u8; 32])
     }
 }
-
 
 impl WrappedHash256 {
     pub const ZERO: Self = Self([0u8; 32]);
@@ -34,7 +32,6 @@ impl WrappedHash256 {
     }
 }
 
-
 pub fn q_proof_to_wq_proof(proof: &MerkleProofCore<QHash256>) -> MerkleProofCore<WrappedHash256> {
     MerkleProofCore {
         siblings: proof.siblings.iter().map(|x| WrappedHash256(*x)).collect(),
@@ -43,7 +40,6 @@ pub fn q_proof_to_wq_proof(proof: &MerkleProofCore<QHash256>) -> MerkleProofCore
         root: WrappedHash256(proof.root),
     }
 }
-
 
 impl From<WrappedHash256> for QHash256 {
     fn from(wrapped: WrappedHash256) -> Self {

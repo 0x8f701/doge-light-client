@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -462,5 +462,59 @@ mod test {
         }
 
         Ok(())
+    }
+
+    /// B10: for hashes with n_size > 3, `new_from_hash` never assigns `high_u32`
+    /// into `n_compact` — it only does `n_compact >>= 8` on a zero, so the
+    /// significand is always 0.
+    #[test]
+    fn b10_new_from_hash_zeroes_compact_when_n_size_gt_3() {
+        let all_ones = [0xffu8; 32];
+        let d = BTCDifficulty::new_from_hash(all_ones);
+        assert!(
+            d.is_zero(),
+            "B10 nail: all-ones hash collides to zero difficulty; compact={:#010x} exp={} sig={:#x}",
+            d.0,
+            d.get_exponent(),
+            d.get_significand()
+        );
+
+        let mut h = [0u8; 32];
+        h[0] = 0x01;
+        let d2 = BTCDifficulty::new_from_hash(h);
+        assert!(
+            d2.is_zero(),
+            "B10 nail: leading-0x01 hash collides to zero; compact={:#010x}",
+            d2.0
+        );
+
+        // Sanity: a very small hash (only lowest 2 bytes set) uses n_size<=3 path
+        // and should produce a non-zero significand if high_u32 is used.
+        let mut small = [0u8; 32];
+        small[30] = 0x12;
+        small[31] = 0x34;
+        let d3 = BTCDifficulty::new_from_hash(small);
+        // n_size for ~16 bits is 2 or 3; path assigns high_u32 — not forced zero by the bug
+        assert!(
+            !d3.is_zero() || d3.get_exponent() > 0,
+            "small-hash path should not hit the n_size>3 zeroing bug; compact={:#010x}",
+            d3.0
+        );
+    }
+
+    /// B10 consequence via the real PoW gate: all-ones hash must be rejected.
+    #[test]
+    fn b10_check_proof_of_work_must_reject_all_ones() {
+        use crate::constants::DogeMainNetConfig;
+        use crate::logic::check_doge_block_seq::check_proof_of_work;
+
+        let n_bits: u32 = 0x1b671062;
+        let all_ones = [0xffu8; 32];
+        let accepted = check_proof_of_work::<DogeMainNetConfig>(all_ones, n_bits);
+        assert!(
+            !accepted,
+            "B10 nail: all-ones PoW hash ACCEPTED against n_bits={:#x} (consensus bypass)",
+            n_bits
+        );
     }
 }

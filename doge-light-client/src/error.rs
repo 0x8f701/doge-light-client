@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -27,9 +27,9 @@ with contributions from Carter Feldman (https://x.com/cmpeq)."
 //! Error types
 
 #[cfg(feature = "serialize_borsh")]
-use borsh::{BorshSerialize, BorshDeserialize};
+use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(feature = "serialize_serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use num_derive::FromPrimitive;
 use thiserror::Error;
@@ -39,7 +39,6 @@ use thiserror::Error;
 /// Errors that may be returned by the oracle program
 #[derive(Clone, Debug, Eq, Error, PartialEq, Copy, FromPrimitive)]
 pub enum DogeBridgeError {
-
     /// 0 - Error deserializing an account
     #[error("Error deserializing an account")]
     DeserializationError = 0,
@@ -74,7 +73,6 @@ pub enum DogeBridgeError {
     #[error("Numerical overflow")]
     NumericalOverflow = 10,
 
-
     /// Generic catch all error
     #[error("Unknown Error")]
     UnknownError = 600,
@@ -105,7 +103,9 @@ pub enum DogeBridgeError {
     AuxPowCoinbaseMissingChainMerkleRoot = 611,
     #[error("MERGED_MINING_HEADER found twice in coinbase transaction input script")]
     MergedMiningHeaderFoundTwiceInCoinbase = 612,
-    #[error("MERGED_MINING_HEADER not found at the beginning of the coinbase transaction input script")]
+    #[error(
+        "MERGED_MINING_HEADER not found at the beginning of the coinbase transaction input script"
+    )]
     MergedMiningHeaderNotFoundAtCoinbaseScriptStart = 613,
     #[error("chain merkle root starts too late in the coinbase transaction input script")]
     AuxPowChainMerkleRootTooLateInCoinbaseInputScript = 614,
@@ -127,8 +127,6 @@ pub enum DogeBridgeError {
     FeedIndexAlreadyInitializedExample = 622,
     #[error("NoNeedToResize")]
     NoNeedToResizeExample = 623,
-
-
 
     /// start doge bridge runner stuff
     #[error("Attempted to fetch a Block at a height that is not stored in the cache (it is either too old or has not been processed yet)")]
@@ -154,7 +152,6 @@ pub enum DogeBridgeError {
     #[error("The index of the block tree failed to rollback correctly")]
     RollbackBlockTreeIndexMismatch = 711,
 
-
     // start fixed append tree errors
     #[error("Cannot revert to index greater than or equal to current index")]
     RevertIndexTooHigh = 724,
@@ -164,8 +161,6 @@ pub enum DogeBridgeError {
     RevertIndexNotPrefix = 726,
     #[error("Too many changed left siblings provided")]
     TooManyChangedLeftSiblings = 727,
-
-
 
     #[error("Invalid bridge ZKP")]
     BridgeZKPError = 750,
@@ -179,15 +174,15 @@ pub enum DogeBridgeError {
     #[error("Invalid public inputs for bridge ZKP")]
     InvalidPublicInputsForBridgeZKP = 753,
 
-
-
     #[error("There are no fees to send to the fee collector")]
     NoFeesToSendToFeeCollector = 800,
 
     #[error("You cannot rollback to a state before the last finalized block")]
     AttemptedRollbackOfFinalizedBlock = 801,
 
-    #[error("The bit-list buffer provided is too small for the size specified in the bit vector header")]
+    #[error(
+        "The bit-list buffer provided is too small for the size specified in the bit vector header"
+    )]
     BitListBufferTooSmall = 802,
     #[error("The hash of the bit-list or the provided new bit-list hash stack does not match the expected hash")]
     BitListHashMismatch = 803,
@@ -198,11 +193,7 @@ pub enum DogeBridgeError {
     AutoProcessMintHashMismatch = 805,
     #[error("The caller attempted to perform a bridge state transition without clearing the pending auto processed mint hash stack")]
     AutoProcessMintHashNotEmpty = 806,
-
-
 }
-
-
 
 #[cfg(feature = "solprogram")]
 impl solana_program::program_error::PrintProgramError for DogeBridgeError {
@@ -224,14 +215,11 @@ impl<T> solana_program::decode_error::DecodeError<T> for DogeBridgeError {
     }
 }
 
-
-
 #[macro_export]
 macro_rules! doge_bail {
     ($err:expr $(,)?) => {
         return Err($err);
     };
 }
-
 
 pub type QDogeResult<T> = Result<T, DogeBridgeError>;

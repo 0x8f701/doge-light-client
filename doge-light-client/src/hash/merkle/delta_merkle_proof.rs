@@ -16,22 +16,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
 with contributions from Carter Feldman (https://x.com/cmpeq)."
 */
 
-
 use crate::hash::traits::MerkleHasher;
 
 use super::utils::compute_root_merkle_proof_generic;
 
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct DeltaMerkleProofCore<Hash: PartialEq + Copy> {
     pub old_root: Hash,
@@ -44,10 +52,18 @@ pub struct DeltaMerkleProofCore<Hash: PartialEq + Copy> {
     pub siblings: Vec<Hash>,
 }
 
-
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct DeltaMerkleProofCorePartial<Hash: PartialEq + Copy> {
     pub old_value: Hash,
@@ -162,7 +178,6 @@ impl<Hash: PartialEq + Copy + Default> Default for DeltaMerkleProofCore<Hash> {
     }
 }
 
-
 impl<Hash: PartialEq + Copy + Default> Default for DeltaMerkleProofCorePartial<Hash> {
     fn default() -> Self {
         Self {
@@ -173,8 +188,6 @@ impl<Hash: PartialEq + Copy + Default> Default for DeltaMerkleProofCorePartial<H
         }
     }
 }
-
-
 
 impl<Hash: PartialEq + Copy> DeltaMerkleProofCorePartial<Hash> {
     pub fn new_from_params(
@@ -191,8 +204,16 @@ impl<Hash: PartialEq + Copy> DeltaMerkleProofCorePartial<Hash> {
         }
     }
     pub fn to_full<Hasher: MerkleHasher<Hash>>(&self) -> DeltaMerkleProofCore<Hash> {
-        let old_root = compute_root_merkle_proof_generic::<Hash, Hasher>(self.old_value, self.index, &self.siblings);
-        let new_root = compute_root_merkle_proof_generic::<Hash, Hasher>(self.new_value, self.index, &self.siblings);
+        let old_root = compute_root_merkle_proof_generic::<Hash, Hasher>(
+            self.old_value,
+            self.index,
+            &self.siblings,
+        );
+        let new_root = compute_root_merkle_proof_generic::<Hash, Hasher>(
+            self.new_value,
+            self.index,
+            &self.siblings,
+        );
         DeltaMerkleProofCore {
             old_root,
             old_value: self.old_value,
@@ -203,8 +224,16 @@ impl<Hash: PartialEq + Copy> DeltaMerkleProofCorePartial<Hash> {
         }
     }
     pub fn into_full<Hasher: MerkleHasher<Hash>>(self) -> DeltaMerkleProofCore<Hash> {
-        let old_root = compute_root_merkle_proof_generic::<Hash, Hasher>(self.old_value, self.index, &self.siblings);
-        let new_root = compute_root_merkle_proof_generic::<Hash, Hasher>(self.new_value, self.index, &self.siblings);
+        let old_root = compute_root_merkle_proof_generic::<Hash, Hasher>(
+            self.old_value,
+            self.index,
+            &self.siblings,
+        );
+        let new_root = compute_root_merkle_proof_generic::<Hash, Hasher>(
+            self.new_value,
+            self.index,
+            &self.siblings,
+        );
         DeltaMerkleProofCore {
             old_root,
             old_value: self.old_value,
@@ -216,7 +245,9 @@ impl<Hash: PartialEq + Copy> DeltaMerkleProofCorePartial<Hash> {
     }
 }
 
-impl<Hash: PartialEq + Copy> From<DeltaMerkleProofCore<Hash>> for DeltaMerkleProofCorePartial<Hash> {
+impl<Hash: PartialEq + Copy> From<DeltaMerkleProofCore<Hash>>
+    for DeltaMerkleProofCorePartial<Hash>
+{
     fn from(value: DeltaMerkleProofCore<Hash>) -> Self {
         Self {
             old_value: value.old_value,
@@ -226,7 +257,9 @@ impl<Hash: PartialEq + Copy> From<DeltaMerkleProofCore<Hash>> for DeltaMerklePro
         }
     }
 }
-impl<Hash: PartialEq + Copy> From<&DeltaMerkleProofCore<Hash>> for DeltaMerkleProofCorePartial<Hash> {
+impl<Hash: PartialEq + Copy> From<&DeltaMerkleProofCore<Hash>>
+    for DeltaMerkleProofCorePartial<Hash>
+{
     fn from(value: &DeltaMerkleProofCore<Hash>) -> Self {
         Self {
             old_value: value.old_value,

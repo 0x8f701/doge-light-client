@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -37,10 +37,7 @@ pub fn gen_bridge_initial_state<
     fetcher: &mut HF,
     new_tip: u32,
 ) -> anyhow::Result<
-    QEDDogeChainStateCore<
-        QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE,
-        QDOGE_BRIDGE_BLOCK_TREE_HEIGHT,
-    >,
+    QEDDogeChainStateCore<QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE, QDOGE_BRIDGE_BLOCK_TREE_HEIGHT>,
 > {
     if new_tip < QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE as u32 {
         return Err(anyhow::anyhow!(

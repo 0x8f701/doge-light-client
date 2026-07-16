@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -30,7 +30,6 @@ pub fn scrypt_1024_1_1_256(data: &[u8]) -> [u8; 32] {
     let params = Params::new(10, 1, 1, 32).unwrap();
     let mut output = [0u8; 32];
 
-    
     scrypt::scrypt(data, data, &params, &mut output).unwrap();
     output
 }

@@ -29,9 +29,7 @@ use std::time::Duration;
 use bitcoin::Block;
 use doge_light_client::{
     common_types::QHash256,
-    core_data::{
-        QDogeBlock, QDogeBlockHeader,
-    },
+    core_data::{QDogeBlock, QDogeBlockHeader},
     doge::transaction::BTCTransaction,
     hash::{
         merkle::{merkle_proof::MerkleProofCore, utils::compute_root_merkle_proof_generic},
@@ -43,9 +41,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use ureq::Agent;
 
 use crate::link_common::{bitcoin_convert::btc_block_to_qdoge, wrapped_hash_256::WrappedHash256};
-use crate::{
-    traits::{QDogeBlockFetcher, QDogeBlockHeaderFetcher},
-};
+use crate::traits::{QDogeBlockFetcher, QDogeBlockHeaderFetcher};
 
 #[derive(Debug, Clone)]
 pub struct DogeLinkElectrsClient {

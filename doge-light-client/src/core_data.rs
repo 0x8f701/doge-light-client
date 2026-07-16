@@ -24,19 +24,22 @@ substantial portions of the software:
 with contributions from Carter Feldman (https://x.com/cmpeq)."
 */
 
-
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
 use crate::{
-    common_types::QHash256, constants::{DogeNetworkConfig, MERGED_MINING_HEADER, VERSION_AUXPOW}, doge::{
+    common_types::QHash256,
+    constants::{DogeNetworkConfig, MERGED_MINING_HEADER, VERSION_AUXPOW},
+    doge::{
         coinbase_transaction::DogeAuxPowCoinbaseTransaction,
         transaction::BTCTransaction,
         varuint::{decode_varuint_partial, encode_varuint, varuint_size},
-    }, error::{DogeBridgeError, QDogeResult}, hash::{
+    },
+    error::{DogeBridgeError, QDogeResult},
+    hash::{
         scrypt_doge::scrypt_1024_1_1_256,
         sha256::QBTCHash256Hasher,
         traits::{BytesHasher, MerkleHasher},
-    }
+    },
 };
 
 fn find_in_array(data: &[u8], search_sub_array: &[u8]) -> Option<usize> {
@@ -57,10 +60,22 @@ fn find_in_array(data: &[u8], search_sub_array: &[u8]) -> Option<usize> {
 }
 // Return
 
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
-#[cfg_attr(feature = "serialize_bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
+#[cfg_attr(
+    feature = "serialize_bytemuck",
+    derive(bytemuck::Pod, bytemuck::Zeroable)
+)]
 #[derive(
     Copy, Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, FromBytes, IntoBytes, Immutable,
 )]
@@ -139,9 +154,18 @@ impl QStandardBlockHeader {
     }
 }
 
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
 #[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd)]
 pub struct QMerkleBranch {
     pub hashes: Vec<QHash256>,
@@ -194,9 +218,18 @@ impl QMerkleBranch {
     }
 }
 
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
 #[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd)]
 pub struct QAuxPow {
     pub coinbase_transaction: DogeAuxPowCoinbaseTransaction,
@@ -427,9 +460,18 @@ impl QAuxPow {
     }
 }
 
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
 #[derive(Clone, Debug, PartialEq, Default, Eq, Ord, PartialOrd)]
 pub struct QDogeBlockHeaderAndClaimInfo {
     pub block_header: QDogeBlockHeader,
@@ -439,9 +481,18 @@ pub struct QDogeBlockHeaderAndClaimInfo {
     pub auto_claimed_deposits_next_index: u32,
 }
 
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
 #[derive(Clone, Debug, PartialEq, Default, Eq, Ord, PartialOrd)]
 pub struct QDogeBlockHeader {
     pub header: QStandardBlockHeader,
@@ -467,9 +518,8 @@ impl QDogeBlockHeader {
                 data.len()
             );
         }
-        let header = QStandardBlockHeader::from_bytes(&data[0..80]).map_err(|e| {
-            anyhow::anyhow!("error deserializing QDogeBlockHeader header: {}", e)
-        })?;
+        let header = QStandardBlockHeader::from_bytes(&data[0..80])
+            .map_err(|e| anyhow::anyhow!("error deserializing QDogeBlockHeader header: {}", e))?;
         let aux_pow = if header.is_aux_pow() {
             let (aux, _size) = QAuxPow::decode_consensus_bytes(&data[80..]).map_err(|e| {
                 anyhow::anyhow!("error deserializing QDogeBlockHeader aux_pow: {}", e)
@@ -481,7 +531,6 @@ impl QDogeBlockHeader {
         Ok(Self { header, aux_pow })
     }
 
-
     pub fn from_consensus_bytes_with_length(data: &[u8]) -> anyhow::Result<(usize, Self)> {
         if data.len() < 80 {
             anyhow::bail!(
@@ -489,9 +538,8 @@ impl QDogeBlockHeader {
                 data.len()
             );
         }
-        let header = QStandardBlockHeader::from_bytes(&data[0..80]).map_err(|e| {
-            anyhow::anyhow!("error deserializing QDogeBlockHeader header: {}", e)
-        })?;
+        let header = QStandardBlockHeader::from_bytes(&data[0..80])
+            .map_err(|e| anyhow::anyhow!("error deserializing QDogeBlockHeader header: {}", e))?;
         let mut size = 80;
         let aux_pow = if header.is_aux_pow() {
             let (aux, aux_size) = QAuxPow::decode_consensus_bytes(&data[80..]).map_err(|e| {
@@ -516,9 +564,18 @@ impl QDogeBlockHeader {
     }
 }
 
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
 #[derive(Clone, Debug, PartialEq)]
 pub struct QDogeBlock {
     pub header: QStandardBlockHeader,
@@ -558,19 +615,18 @@ impl QDogeBlock {
                 data.len()
             );
         }
-        let (size_header, header) = QDogeBlockHeader::from_consensus_bytes_with_length(&data).map_err(|e| {
-            anyhow::anyhow!("error deserializing QDogeBlock header: {}", e)
-        })?;
+        let (size_header, header) = QDogeBlockHeader::from_consensus_bytes_with_length(&data)
+            .map_err(|e| anyhow::anyhow!("error deserializing QDogeBlock header: {}", e))?;
         let mut offset = size_header;
-        let (tx_count, size_tx_count) = decode_varuint_partial(&data[offset..]).map_err(|e| {
-            anyhow::anyhow!("error deserializing QDogeBlock tx_count: {}", e)
-        })?;
+        let (tx_count, size_tx_count) = decode_varuint_partial(&data[offset..])
+            .map_err(|e| anyhow::anyhow!("error deserializing QDogeBlock tx_count: {}", e))?;
         offset += size_tx_count;
         let mut txs = Vec::with_capacity(tx_count as usize);
         for _ in 0..tx_count {
-            let (tx, offset_new) = BTCTransaction::from_bytes_offset(&data, offset).map_err(|e| {
-                anyhow::anyhow!("error deserializing QDogeBlock transaction: {}", e)
-            })?;
+            let (tx, offset_new) =
+                BTCTransaction::from_bytes_offset(&data, offset).map_err(|e| {
+                    anyhow::anyhow!("error deserializing QDogeBlock transaction: {}", e)
+                })?;
             offset = offset_new;
             txs.push(tx);
         }

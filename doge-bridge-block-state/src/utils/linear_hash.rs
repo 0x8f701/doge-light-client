@@ -60,9 +60,7 @@ pub fn linear_hash_stack_2d_pop_single_verify(
         tip_group_hash_without_item,
     )
 }
-pub fn linear_hash_list(
-    list: &[QHash256],
-) -> QHash256 {
+pub fn linear_hash_list(list: &[QHash256]) -> QHash256 {
     let mut current_hash = QHash256::default();
     let mut buf = [0u8; 64];
     for group_hash in list.iter() {
@@ -70,9 +68,7 @@ pub fn linear_hash_list(
     }
     current_hash
 }
-pub fn linear_hash_2d_list(
-    list_of_groups: &[Vec<QHash256>],
-) -> QHash256 {
+pub fn linear_hash_2d_list(list_of_groups: &[Vec<QHash256>]) -> QHash256 {
     let group_hashes: Vec<QHash256> = list_of_groups
         .iter()
         .map(|group| linear_hash_list(group))

@@ -16,19 +16,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
 with contributions from Carter Feldman (https://x.com/cmpeq)."
 */
 
-use psy_doge_data_link::link_sync::{block_header_cache::BlockHeaderFetcher, bridge_state_helpers::gen_bridge_initial_state_data, electrs_link::DogeLinkElectrsClient};
 use doge_light_client::network_params::DogeNetworkType;
+use psy_doge_data_link::link_sync::{
+    block_header_cache::BlockHeaderFetcher, bridge_state_helpers::gen_bridge_initial_state_data,
+    electrs_link::DogeLinkElectrsClient,
+};
 
 fn main() {
-
     const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize = 32;
     const QDOGE_BRIDGE_BLOCK_TREE_HEIGHT: usize = 32;
 
@@ -38,14 +40,15 @@ fn main() {
     ));
 
     //fetcher.load_block_headers_bin("test_data/testnet_block_headers_7654400-7654500.bin").unwrap();
-    
+
     let new_tip = 7667430;
-    let data = gen_bridge_initial_state_data::<_, QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE, QDOGE_BRIDGE_BLOCK_TREE_HEIGHT>(
-        &mut fetcher,
-        new_tip
-    ).expect("error generating initial state data");
+    let data = gen_bridge_initial_state_data::<
+        _,
+        QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE,
+        QDOGE_BRIDGE_BLOCK_TREE_HEIGHT,
+    >(&mut fetcher, new_tip)
+    .expect("error generating initial state data");
 
     println!("tip: {}", new_tip);
-    println!("data: {}",hex::encode(&data));
-
+    println!("data: {}", hex::encode(&data));
 }

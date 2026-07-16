@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -28,13 +28,38 @@ use zerocopy_derive::{FromBytes, Immutable, IntoBytes, KnownLayout, Unaligned};
 
 use crate::hash::traits::{get_zero_hashes, MerkleHasher, MerkleZeroHasher, ZeroableHash};
 
-use super::{delta_merkle_proof::DeltaMerkleProofCore, merkle_proof::{MerkleProofCore, MerkleProofCorePartial}};
+use super::{
+    delta_merkle_proof::DeltaMerkleProofCore,
+    merkle_proof::{MerkleProofCore, MerkleProofCorePartial},
+};
 
-
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, FromBytes, Immutable, IntoBytes, KnownLayout, Unaligned)]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    FromBytes,
+    Immutable,
+    IntoBytes,
+    KnownLayout,
+    Unaligned,
+)]
 #[repr(C)]
 pub struct MerkleAppendTreeLevel<Hash: PartialEq + Copy> {
     pub left: Hash,
@@ -57,7 +82,6 @@ impl<Hash: PartialEq + Copy> MerkleAppendTreeLevel<Hash> {
     }
 }
 
-
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct MerkleAppendTree<Hash: PartialEq + Copy> {
     pub height: u8,
@@ -65,21 +89,20 @@ pub struct MerkleAppendTree<Hash: PartialEq + Copy> {
     pub levels: Vec<MerkleAppendTreeLevel<Hash>>,
 }
 
-
 impl<Hash: PartialEq + Copy + ZeroableHash> MerkleAppendTree<Hash> {
-
-    pub fn new_empty<Hasher: MerkleZeroHasher<Hash>>(
-        height: u8,
-    ) -> Self {
+    pub fn new_empty<Hasher: MerkleZeroHasher<Hash>>(height: u8) -> Self {
         let zero_hashes = get_zero_hashes::<Hash, Hasher>(height as usize);
         Self {
             height,
             next_index: 0,
-            levels: zero_hashes.into_iter().map(|zh| MerkleAppendTreeLevel {
-                left: zh,
-                right: zh,
-                zero_hash: zh,
-            }).collect(),
+            levels: zero_hashes
+                .into_iter()
+                .map(|zh| MerkleAppendTreeLevel {
+                    left: zh,
+                    right: zh,
+                    zero_hash: zh,
+                })
+                .collect(),
         }
     }
     pub fn new_from_hasher<Hasher: MerkleZeroHasher<Hash>>(
@@ -104,17 +127,20 @@ impl<Hash: PartialEq + Copy> MerkleAppendTree<Hash> {
             Self {
                 height: siblings.len() as u8,
                 next_index: 0,
-                levels: zero_hashes.into_iter().map(|zh| MerkleAppendTreeLevel {
-                    left: zh,
-                    right: zh,
-                    zero_hash: zh,
-                }).collect(),
+                levels: zero_hashes
+                    .into_iter()
+                    .map(|zh| MerkleAppendTreeLevel {
+                        left: zh,
+                        right: zh,
+                        zero_hash: zh,
+                    })
+                    .collect(),
             }
-        }else{
+        } else {
             let mut levels = Vec::with_capacity(siblings.len());
 
             let mut current = value;
-            let mut current_index = next_index-1;
+            let mut current_index = next_index - 1;
             for (sibling, zero_hash) in siblings.into_iter().zip(zero_hashes.into_iter()) {
                 let swap = (current_index & 1) == 1;
                 let new_v = Hasher::two_to_one_swap(swap, &current, &sibling);
@@ -125,7 +151,7 @@ impl<Hash: PartialEq + Copy> MerkleAppendTree<Hash> {
                         right: current,
                         zero_hash: zero_hash,
                     });
-                }else{
+                } else {
                     levels.push(MerkleAppendTreeLevel {
                         left: current,
                         right: sibling,
@@ -134,7 +160,7 @@ impl<Hash: PartialEq + Copy> MerkleAppendTree<Hash> {
                 }
 
                 current = new_v;
-                
+
                 current_index >>= 1;
             }
             Self {
@@ -142,7 +168,6 @@ impl<Hash: PartialEq + Copy> MerkleAppendTree<Hash> {
                 next_index,
                 levels,
             }
-
         }
     }
     pub fn get_next_index(&self) -> u64 {
@@ -152,10 +177,10 @@ impl<Hash: PartialEq + Copy> MerkleAppendTree<Hash> {
         self.height
     }
     pub fn get_value(&self) -> Hash {
-        let is_next_right = (self.next_index&1) == 1;
-        if is_next_right{
+        let is_next_right = (self.next_index & 1) == 1;
+        if is_next_right {
             self.levels[0].left
-        }else{
+        } else {
             self.levels[0].right
         }
     }
@@ -171,7 +196,7 @@ impl<Hash: PartialEq + Copy> MerkleAppendTree<Hash> {
             let is_right_child = (current_index & 1) == 1;
             if is_right_child {
                 level.right = current;
-            }else{
+            } else {
                 level.left = current;
                 level.right = level.zero_hash;
             }
@@ -181,7 +206,10 @@ impl<Hash: PartialEq + Copy> MerkleAppendTree<Hash> {
         self.next_index += 1;
     }
 
-    pub fn append_delta_merkle_proof<H: MerkleHasher<Hash>>(&mut self, new_value: Hash) -> DeltaMerkleProofCore<Hash> {
+    pub fn append_delta_merkle_proof<H: MerkleHasher<Hash>>(
+        &mut self,
+        new_value: Hash,
+    ) -> DeltaMerkleProofCore<Hash> {
         let mut current = new_value;
         let mut current_index = self.next_index;
 
@@ -189,7 +217,7 @@ impl<Hash: PartialEq + Copy> MerkleAppendTree<Hash> {
             let is_right_child = (current_index & 1) == 1;
             if is_right_child {
                 level.right = current;
-            }else{
+            } else {
                 level.left = current;
                 level.right = level.zero_hash;
             }
@@ -202,28 +230,27 @@ impl<Hash: PartialEq + Copy> MerkleAppendTree<Hash> {
 
         let mpp = self.get_partial_merkle_proof_for_current_index();
 
-        DeltaMerkleProofCore::from_params::<H>(
-            mpp.index,
-            zero_leaf,
-            new_value,
-            mpp.siblings
-        )
+        DeltaMerkleProofCore::from_params::<H>(mpp.index, zero_leaf, new_value, mpp.siblings)
     }
 
     pub fn get_partial_merkle_proof_for_current_index(&self) -> MerkleProofCorePartial<Hash> {
         if self.next_index == 0 {
-            MerkleProofCorePartial::new_from_params(0, self.get_value(), self.levels.iter().map(|x|x.zero_hash).collect())
-        }else{
+            MerkleProofCorePartial::new_from_params(
+                0,
+                self.get_value(),
+                self.levels.iter().map(|x| x.zero_hash).collect(),
+            )
+        } else {
             let mut siblings = Vec::with_capacity(self.height as usize);
             let value = self.get_value();
-            let index = self.next_index-1;
+            let index = self.next_index - 1;
             let mut current_index = index;
 
             for level in self.levels.iter() {
                 let is_sibling_left_child = (current_index & 1) == 1;
                 if is_sibling_left_child {
                     siblings.push(level.left);
-                }else{
+                } else {
                     siblings.push(level.right);
                 }
                 current_index >>= 1;
@@ -232,20 +259,26 @@ impl<Hash: PartialEq + Copy> MerkleAppendTree<Hash> {
         }
     }
 
-    pub fn get_merkle_proof_for_current_index<H: MerkleHasher<Hash>>(&self) -> MerkleProofCore<Hash> {
+    pub fn get_merkle_proof_for_current_index<H: MerkleHasher<Hash>>(
+        &self,
+    ) -> MerkleProofCore<Hash> {
         if self.next_index == 0 {
-            MerkleProofCore::new_from_params::<H>(0, self.get_value(), self.levels.iter().map(|x|x.zero_hash).collect())
-        }else{
+            MerkleProofCore::new_from_params::<H>(
+                0,
+                self.get_value(),
+                self.levels.iter().map(|x| x.zero_hash).collect(),
+            )
+        } else {
             let mut siblings = Vec::with_capacity(self.height as usize);
             let value = self.get_value();
-            let index = self.next_index-1;
+            let index = self.next_index - 1;
             let mut current_index = index;
 
             for level in self.levels.iter() {
                 let is_sibling_left_child = (current_index & 1) == 1;
                 if is_sibling_left_child {
                     siblings.push(level.left);
-                }else{
+                } else {
                     siblings.push(level.right);
                 }
                 current_index >>= 1;
@@ -253,7 +286,4 @@ impl<Hash: PartialEq + Copy> MerkleAppendTree<Hash> {
             MerkleProofCore::new_from_params::<H>(index, value, siblings)
         }
     }
-
 }
-
-

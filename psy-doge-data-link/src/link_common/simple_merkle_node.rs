@@ -1,5 +1,5 @@
-use std::cmp::Ordering;
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct SimpleMerkleNodeKey {
@@ -10,7 +10,7 @@ impl PartialOrd for SimpleMerkleNodeKey {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self.level != other.level {
             self.level.partial_cmp(&other.level)
-        }else{
+        } else {
             self.index.partial_cmp(&other.index)
         }
     }
@@ -54,11 +54,10 @@ impl SimpleMerkleNodeKey {
     pub fn is_direct_path_related(&self, other: &SimpleMerkleNodeKey) -> bool {
         if other.level == self.level {
             self.index == other.index
-        }else if other.level < self.level {
+        } else if other.level < self.level {
             // opt?: (self.index>>(self.level-other.level)) == other.index
             self.parent_at_level(other.level).index == other.index
-
-        }else{
+        } else {
             other.parent_at_level(self.level).index == self.index
         }
     }
@@ -136,7 +135,6 @@ impl SimpleMerkleNodeKey {
     }
 }
 
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct SimpleMerkleNode<Hash> {
     pub key: SimpleMerkleNodeKey,
@@ -161,9 +159,9 @@ impl<Hash: PartialOrd> PartialOrd for SimpleMerkleNode<Hash> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self.key.level != other.key.level {
             self.key.level.partial_cmp(&other.key.level)
-        }else if self.key.index != other.key.index {
+        } else if self.key.index != other.key.index {
             self.key.index.partial_cmp(&other.key.index)
-        }else {
+        } else {
             self.value.partial_cmp(&other.value)
         }
     }

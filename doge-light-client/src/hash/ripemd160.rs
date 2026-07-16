@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -27,7 +27,9 @@ with contributions from Carter Feldman (https://x.com/cmpeq)."
 use crate::common_types::QHash160;
 
 use super::{
-    ripemd160_impl::hash_impl_ripemd160_bytes, sha256_impl::hash_impl_sha256_bytes, traits::{iterate_merkle_hasher, BytesHasher, MerkleHasher, MerkleZeroHasher}
+    ripemd160_impl::hash_impl_ripemd160_bytes,
+    sha256_impl::hash_impl_sha256_bytes,
+    traits::{iterate_merkle_hasher, BytesHasher, MerkleHasher, MerkleZeroHasher},
 };
 
 #[derive(Clone, Copy)]
@@ -51,8 +53,6 @@ impl MerkleZeroHasher<QHash160> for QRipemd160Hasher {
         iterate_merkle_hasher::<QHash160, Self>([0u8; 20], reverse_level)
     }
 }
-
-
 
 #[derive(Clone, Copy)]
 pub struct QBTCHash160Hasher;

@@ -16,15 +16,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
 with contributions from Carter Feldman (https://x.com/cmpeq)."
 */
 
-use crate::{common_types::{QHash160, QHash256}, hash::{ripemd160_impl::hash_impl_ripemd160_bytes, sha256_impl::hash_impl_sha256_bytes}};
+use crate::{
+    common_types::{QHash160, QHash256},
+    hash::{ripemd160_impl::hash_impl_ripemd160_bytes, sha256_impl::hash_impl_sha256_bytes},
+};
 
 pub trait ZeroableHash: Sized + Copy + Clone {
     fn get_zero_value() -> Self;
@@ -44,7 +47,7 @@ pub trait MerkleHasher<Hash: PartialEq> {
     fn two_to_one_swap(swap: bool, left: &Hash, right: &Hash) -> Hash {
         if swap {
             Self::two_to_one(right, left)
-        }else{
+        } else {
             Self::two_to_one(left, right)
         }
     }
@@ -75,7 +78,11 @@ pub fn get_zero_hashes<Hash: PartialEq + ZeroableHash, Hasher: MerkleHasher<Hash
     hashes
 }
 
-pub fn get_zero_hashes_sized<Hash: PartialEq + ZeroableHash + Copy, Hasher: MerkleHasher<Hash>, const N: usize>() -> [Hash; N] {
+pub fn get_zero_hashes_sized<
+    Hash: PartialEq + ZeroableHash + Copy,
+    Hasher: MerkleHasher<Hash>,
+    const N: usize,
+>() -> [Hash; N] {
     let v = Hash::get_zero_value();
     let mut hashes = [v; N];
     for i in 1..N {
@@ -83,7 +90,6 @@ pub fn get_zero_hashes_sized<Hash: PartialEq + ZeroableHash + Copy, Hasher: Merk
     }
     hashes
 }
-
 
 pub const ZERO_HASH_CACHE_SIZE: usize = 128;
 pub trait MerkleZeroHasherWithCache<Hash: PartialEq + Copy>: MerkleHasher<Hash> {
@@ -100,15 +106,17 @@ impl<Hash: PartialEq + Copy, T: MerkleZeroHasherWithCache<Hash>> MerkleZeroHashe
     }
 }
 
-
-pub trait QStandardHasher<Hash: PartialEq + Copy>: MerkleHasher<Hash> + BytesHasher<Hash> + MerkleZeroHasher<Hash> {
+pub trait QStandardHasher<Hash: PartialEq + Copy>:
+    MerkleHasher<Hash> + BytesHasher<Hash> + MerkleZeroHasher<Hash>
+{
 }
 
-impl<T: MerkleHasher<Hash> + BytesHasher<Hash> + MerkleZeroHasher<Hash>, Hash: PartialEq + Copy> QStandardHasher<Hash> for T {
+impl<
+        T: MerkleHasher<Hash> + BytesHasher<Hash> + MerkleZeroHasher<Hash>,
+        Hash: PartialEq + Copy,
+    > QStandardHasher<Hash> for T
+{
 }
-
-
-
 
 pub trait DogeHashProvider {
     fn hash_bytes_sha256(data: &[u8]) -> QHash256;
@@ -125,9 +133,7 @@ pub trait DogeHashProvider {
         let first_hash = Self::hash_bytes_sha256(data);
         Self::hash_bytes_sha256(&first_hash)
     }
-
 }
-
 
 pub struct CommonDogeHashProvider;
 

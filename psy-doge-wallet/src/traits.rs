@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -27,7 +27,6 @@ with contributions from Carter Feldman (https://x.com/cmpeq)."
 use doge_light_client::common_types::{QHash160, QHash256};
 
 use crate::wallet_common::signature::{CompressedPublicKey, PsyCompressedSecp256K1Signature};
-
 
 pub trait Secp256K1WalletProvider {
     fn sign(

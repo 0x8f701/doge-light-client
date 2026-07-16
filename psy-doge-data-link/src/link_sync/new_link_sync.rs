@@ -5,7 +5,7 @@ use anyhow::{Context, Result};
 use serde::de::DeserializeOwned;
 
 use doge_light_client::{common_types::QHash256, doge::transaction::BTCTransaction};
-use ureq::{Agent, Body, http::Response};
+use ureq::{http::Response, Agent, Body};
 
 // Import the types we defined above
 use crate::link_common::electrs_types::{
@@ -13,7 +13,6 @@ use crate::link_common::electrs_types::{
     ElectrsMerkleProof, ElectrsSpendingStatus, ElectrsStatsResponse, ElectrsTransaction,
     ElectrsTxStatus, ElectrsUtxo,
 };
-
 
 #[derive(Debug, Clone)]
 pub struct DogeElectrsClientSync {
@@ -75,18 +74,22 @@ impl DogeElectrsClientSync {
 
     fn get_json<T: DeserializeOwned>(&self, endpoint: &str) -> Result<T> {
         let resp = self.call_get(endpoint)?;
-        resp.into_body().read_json::<T>()
-            .context(format!("Failed to parse JSON from {}/{}", self.base_url, endpoint))
+        resp.into_body().read_json::<T>().context(format!(
+            "Failed to parse JSON from {}/{}",
+            self.base_url, endpoint
+        ))
     }
 
     fn get_text(&self, endpoint: &str) -> Result<String> {
         let resp = self.call_get(endpoint)?;
-        resp.into_body().read_to_string().context("Failed to get text response")
+        resp.into_body()
+            .read_to_string()
+            .context("Failed to get text response")
     }
 
     fn get_bytes(&self, endpoint: &str) -> Result<Vec<u8>> {
         let resp = self.call_get(endpoint)?;
-            
+
         resp.into_body()
             .read_to_vec()
             .context("Failed to get byte response")
@@ -135,10 +138,7 @@ impl DogeElectrsClientSync {
 
     /// GET /tx/:txid/merkle-proof
     /// Returns Electrum's blockchain.transaction.get_merkle format
-    pub fn get_transaction_merkle_proof(
-        &self,
-        txid: &QHash256,
-    ) -> Result<ElectrsMerkleProof> {
+    pub fn get_transaction_merkle_proof(&self, txid: &QHash256) -> Result<ElectrsMerkleProof> {
         let txid_str = Self::hash_to_hex_rpc(txid);
         self.get_json(&format!("tx/{}/merkle-proof", txid_str))
     }
@@ -154,10 +154,7 @@ impl DogeElectrsClientSync {
     }
 
     /// GET /tx/:txid/outspends
-    pub fn get_transaction_outspends(
-        &self,
-        txid: &QHash256,
-    ) -> Result<Vec<ElectrsSpendingStatus>> {
+    pub fn get_transaction_outspends(&self, txid: &QHash256) -> Result<Vec<ElectrsSpendingStatus>> {
         let txid_str = Self::hash_to_hex_rpc(txid);
         self.get_json(&format!("tx/{}/outspends", txid_str))
     }
@@ -166,7 +163,7 @@ impl DogeElectrsClientSync {
     /// Broadcast a raw transaction
     pub fn broadcast_raw(&self, tx_hex: &str) -> Result<String> {
         let url = format!("{}/tx", self.base_url);
-        
+
         let resp = match self.client.post(&url).send(tx_hex.as_bytes()) {
             Ok(r) => r,
             Err(ureq::Error::StatusCode(code)) => {
@@ -176,7 +173,8 @@ impl DogeElectrsClientSync {
         };
 
         // Returns txid on success
-        resp.into_body().read_to_string()
+        resp.into_body()
+            .read_to_string()
             .context("Failed to get broadcast response")
     }
 
@@ -190,7 +188,7 @@ impl DogeElectrsClientSync {
     /// Requires Bitcoin Core 28.0+
     pub fn broadcast_package(&self, tx_hexs: Vec<String>) -> Result<serde_json::Value> {
         let url = format!("{}/txs/package", self.base_url);
-        
+
         let resp = match self.client.post(&url).send_json(&tx_hexs) {
             Ok(r) => r,
             Err(ureq::Error::StatusCode(code)) => {
@@ -199,7 +197,8 @@ impl DogeElectrsClientSync {
             Err(e) => anyhow::bail!("Package broadcast transport failed: {}", e),
         };
 
-        resp.into_body().read_json::<serde_json::Value>()
+        resp.into_body()
+            .read_json::<serde_json::Value>()
             .context("Failed to parse package response")
     }
 
@@ -316,8 +315,7 @@ impl DogeElectrsClientSync {
     /// Returns txid at specific index
     pub fn get_block_txid_at_index(&self, hash: &QHash256, index: u32) -> Result<QHash256> {
         let hash_str = Self::hash_to_hex_rpc(hash);
-        let hex_str = self
-            .get_text(&format!("block/{}/txid/{}", hash_str, index))?;
+        let hex_str = self.get_text(&format!("block/{}/txid/{}", hash_str, index))?;
 
         let mut bytes = [0u8; 32];
         hex::decode_to_slice(hex_str.trim(), &mut bytes).context("Invalid txid hex")?;

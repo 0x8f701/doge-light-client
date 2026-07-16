@@ -1,13 +1,17 @@
-use doge_light_client::{block_state::PsyBridgeHeader, chain_state::QEDDogeChainStateCore, common_types::QHash256, core_data::QDogeBlockHeader};
+use doge_light_client::{
+    block_state::PsyBridgeHeader, chain_state::QEDDogeChainStateCore, common_types::QHash256,
+    core_data::QDogeBlockHeader,
+};
 use speedy::{Readable, Writable};
 use zerocopy::{FromBytes, IntoBytes};
 
-use crate::{claim::transition::validator::block_witness::PsyBridgeClaimBlockWitness, constants::{PSY_DOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE, PSY_DOGE_BRIDGE_BLOCK_TREE_HEIGHT}};
+use crate::{
+    claim::transition::validator::block_witness::PsyBridgeClaimBlockWitness,
+    constants::{PSY_DOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE, PSY_DOGE_BRIDGE_BLOCK_TREE_HEIGHT},
+};
 
-pub type PsyDogeBridgeState = QEDDogeChainStateCore<
-    PSY_DOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE,
-    PSY_DOGE_BRIDGE_BLOCK_TREE_HEIGHT,
->;
+pub type PsyDogeBridgeState =
+    QEDDogeChainStateCore<PSY_DOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE, PSY_DOGE_BRIDGE_BLOCK_TREE_HEIGHT>;
 
 #[cfg_attr(
     feature = "serialize_serde",
@@ -30,9 +34,6 @@ pub struct PsyDogeBridgeIncomingBlockWitness {
     pub previous_header_paused_until_secs: u32,
 }
 
-
-
-
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct PsyDogeBridgeIncomingBlockWitnessAndState {
@@ -41,10 +42,7 @@ pub struct PsyDogeBridgeIncomingBlockWitnessAndState {
 }
 
 impl PsyDogeBridgeIncomingBlockWitnessAndState {
-    pub fn new(
-        witness: PsyDogeBridgeIncomingBlockWitness,
-        state: PsyDogeBridgeState,
-    ) -> Self {
+    pub fn new(witness: PsyDogeBridgeIncomingBlockWitness, state: PsyDogeBridgeState) -> Self {
         Self { witness, state }
     }
     #[cfg(any(feature = "serialize_speedy", test))]
@@ -57,4 +55,3 @@ impl PsyDogeBridgeIncomingBlockWitnessAndState {
         Ok(bytes)
     }
 }
-

@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -30,8 +30,6 @@ use doge_light_client::core_data::QDogeBlock;
 use serde::{Deserialize, Serialize};
 
 use crate::{link_sync::electrs_link::DogeLinkElectrsClient, traits::QDogeBlockFetcher};
-
-
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct BlockWithIndex {
@@ -62,7 +60,7 @@ impl BlockFetcher {
 
     pub fn get_blocks(&mut self, heights: &[u32]) -> anyhow::Result<Vec<QDogeBlock>> {
         let mut blocks = Vec::with_capacity(heights.len());
-        for h in heights.iter(){
+        for h in heights.iter() {
             blocks.push(self.get_block(*h)?);
         }
         Ok(blocks)
@@ -77,7 +75,7 @@ impl BlockFetcher {
 
     pub fn get_blocks_imm(&self, heights: &[u32]) -> anyhow::Result<Vec<QDogeBlock>> {
         let mut blocks = Vec::with_capacity(heights.len());
-        for h in heights.iter(){
+        for h in heights.iter() {
             blocks.push(self.get_block_imm(*h)?);
         }
         Ok(blocks)
@@ -85,7 +83,13 @@ impl BlockFetcher {
     pub fn to_blocks(&self) -> Vec<BlockWithIndex> {
         let mut blocks = self.store.iter().collect::<Vec<(&u32, &QDogeBlock)>>();
         blocks.sort_by(|a, b| a.0.cmp(b.0));
-        blocks.iter().map(|(h, b)| BlockWithIndex{height: **h, block: (*b).clone()}).collect()
+        blocks
+            .iter()
+            .map(|(h, b)| BlockWithIndex {
+                height: **h,
+                block: (*b).clone(),
+            })
+            .collect()
     }
     pub fn save_blocks(&self, path: &str) -> anyhow::Result<()> {
         let blocks = self.to_blocks();
@@ -116,7 +120,6 @@ impl BlockFetcher {
         Ok(())
     }
 }
-
 
 impl QDogeBlockFetcher for BlockFetcher {
     fn get_qdoge_block(&self, height: u32) -> anyhow::Result<QDogeBlock> {

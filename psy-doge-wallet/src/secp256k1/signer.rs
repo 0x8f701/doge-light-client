@@ -1,11 +1,17 @@
 use std::collections::HashMap;
 
-
-
-use doge_light_client::{common_types::{QHash160, QHash256}, hash::traits::DogeHashProvider};
+use doge_light_client::{
+    common_types::{QHash160, QHash256},
+    hash::traits::DogeHashProvider,
+};
 use k256::ecdsa::signature::hazmat::PrehashSigner;
 
-use crate::{traits::Secp256K1WalletProvider, wallet_common::signature::{CompressedPublicKey, CompressedPublicKeyToP2PKH, PsyCompressedSecp256K1Signature}};
+use crate::{
+    traits::Secp256K1WalletProvider,
+    wallet_common::signature::{
+        CompressedPublicKey, CompressedPublicKeyToP2PKH, PsyCompressedSecp256K1Signature,
+    },
+};
 pub trait SimpleSingleSigner {
     fn sign_message(&self, message: QHash256) -> anyhow::Result<PsyCompressedSecp256K1Signature>;
     fn get_compressed_public_key(&self) -> CompressedPublicKey;
@@ -18,13 +24,15 @@ impl<T: Secp256K1WalletProvider> SimpleSingleSigner for SimpleSinglePublicKeySig
     fn sign_message(&self, message: QHash256) -> anyhow::Result<PsyCompressedSecp256K1Signature> {
         self.wallet_provider.sign(&self.public_key, message)
     }
-    
+
     fn get_compressed_public_key(&self) -> CompressedPublicKey {
         self.public_key
     }
 }
 impl SimpleSinglePublicKeySigner<MemorySecp256K1Wallet> {
-    pub fn new_insecure_memory_signer_with_private_key<Hasher: DogeHashProvider>(private_key: QHash256) -> anyhow::Result<Self> {
+    pub fn new_insecure_memory_signer_with_private_key<Hasher: DogeHashProvider>(
+        private_key: QHash256,
+    ) -> anyhow::Result<Self> {
         let mut wallet = MemorySecp256K1Wallet::new();
         let public_key = wallet.add_private_key::<Hasher>(private_key)?;
         Ok(Self {
@@ -66,7 +74,6 @@ impl Secp256K1WalletProvider for MemorySecp256K1Wallet {
         }
     }
 
-
     fn contains_public_key(&self, public_key: &CompressedPublicKey) -> bool {
         self.key_map.contains_key(public_key)
     }
@@ -91,7 +98,10 @@ impl MemorySecp256K1Wallet {
             p2pkh_key_map: HashMap::new(),
         }
     }
-    pub fn add_private_key<Hasher: DogeHashProvider>(&mut self, private_key: QHash256) -> anyhow::Result<CompressedPublicKey> {
+    pub fn add_private_key<Hasher: DogeHashProvider>(
+        &mut self,
+        private_key: QHash256,
+    ) -> anyhow::Result<CompressedPublicKey> {
         let signing_key = k256::ecdsa::SigningKey::from_slice(&private_key)?;
         let public_key = signing_key
             .verifying_key()

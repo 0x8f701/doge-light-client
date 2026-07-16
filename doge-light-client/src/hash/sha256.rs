@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -26,13 +26,13 @@ with contributions from Carter Feldman (https://x.com/cmpeq)."
 
 use crate::common_types::QHash256;
 
-use super::{sha256_impl::hash_impl_sha256_bytes, traits::{iterate_merkle_hasher, BytesHasher, MerkleHasher, MerkleZeroHasher}};
-
-
+use super::{
+    sha256_impl::hash_impl_sha256_bytes,
+    traits::{iterate_merkle_hasher, BytesHasher, MerkleHasher, MerkleZeroHasher},
+};
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct QSha256Hasher;
-
 
 impl BytesHasher<QHash256> for QSha256Hasher {
     fn hash_bytes(data: &[u8]) -> QHash256 {
@@ -49,11 +49,9 @@ impl MerkleHasher<QHash256> for QSha256Hasher {
 }
 impl MerkleZeroHasher<QHash256> for QSha256Hasher {
     fn get_zero_hash(reverse_level: usize) -> QHash256 {
-        iterate_merkle_hasher::<QHash256, Self>([0u8;32], reverse_level)
+        iterate_merkle_hasher::<QHash256, Self>([0u8; 32], reverse_level)
     }
 }
-
-
 
 #[inline(always)]
 pub fn btc_hash256_bytes(bytes: &[u8]) -> QHash256 {
@@ -62,7 +60,6 @@ pub fn btc_hash256_bytes(bytes: &[u8]) -> QHash256 {
 
 #[derive(Clone, Copy)]
 pub struct QBTCHash256Hasher;
-
 
 impl BytesHasher<QHash256> for QBTCHash256Hasher {
     fn hash_bytes(data: &[u8]) -> QHash256 {
@@ -79,6 +76,6 @@ impl MerkleHasher<QHash256> for QBTCHash256Hasher {
 }
 impl MerkleZeroHasher<QHash256> for QBTCHash256Hasher {
     fn get_zero_hash(reverse_level: usize) -> QHash256 {
-        iterate_merkle_hasher::<QHash256, Self>([0u8;32], reverse_level)
+        iterate_merkle_hasher::<QHash256, Self>([0u8; 32], reverse_level)
     }
 }

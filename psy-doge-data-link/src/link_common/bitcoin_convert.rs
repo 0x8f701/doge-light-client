@@ -1,9 +1,7 @@
 use bitcoin::{block::SimpleHeader, hashes::Hash, Block};
 use doge_light_client::{
     common_types::QHash256,
-    core_data::{
-        QAuxPow, QDogeBlock, QDogeBlockHeader, QMerkleBranch, QStandardBlockHeader,
-    },
+    core_data::{QAuxPow, QDogeBlock, QDogeBlockHeader, QMerkleBranch, QStandardBlockHeader},
     doge::{coinbase_transaction::DogeAuxPowCoinbaseTransaction, transaction::BTCTransaction},
 };
 
@@ -114,7 +112,6 @@ mod tests {
         let qdoge_block_header = btc_block_header_to_qdoge(&bitcoin_version);
         let qdoge_block_header_bytes = qdoge_block_header.to_consensus_bytes();
         assert_eq!(raw_block_header_btc.to_vec(), qdoge_block_header_bytes);
-    
 
         let auxin_q = qdoge_block_header.aux_pow.as_ref().unwrap();
         let txid_q = auxin_q.coinbase_transaction.get_hash();

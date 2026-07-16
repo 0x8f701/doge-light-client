@@ -24,7 +24,6 @@ substantial portions of the software:
 with contributions from Carter Feldman (https://x.com/cmpeq)."
 */
 
-
 //use bitcoin::consensus::{deserialize_partial, serialize};
 //use bitcoin::VarInt;
 
@@ -36,10 +35,18 @@ use crate::hash::traits::BytesHasher;
 use super::address::{AddressToBTCScript, BTCAddress160};
 use super::varuint::{decode_varuint_partial, encode_varuint, varuint_size};
 
-
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
 #[derive(PartialEq, Clone, Debug, Eq, Ord, PartialOrd)]
 pub struct DogeAuxPowCoinbaseTransaction {
     pub version: u32,
@@ -48,9 +55,18 @@ pub struct DogeAuxPowCoinbaseTransaction {
     pub locktime: u32,
 }
 
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
 #[derive(PartialEq, Clone, Debug, Eq, Ord, PartialOrd)]
 pub struct DogeAuxPowCoinbaseTransactionInput {
     pub hash: QHash256,
@@ -85,7 +101,10 @@ impl DogeAuxPowCoinbaseTransaction {
             locktime: 0,
         }
     }
-    pub fn from_io(inputs: Vec<DogeAuxPowCoinbaseTransactionInput>, outputs: Vec<BTCTransactionOutput>) -> Self {
+    pub fn from_io(
+        inputs: Vec<DogeAuxPowCoinbaseTransactionInput>,
+        outputs: Vec<BTCTransactionOutput>,
+    ) -> Self {
         Self {
             version: 2,
             inputs: inputs,
@@ -123,7 +142,6 @@ impl DogeAuxPowCoinbaseTransaction {
         let use_segwit_serialization = allow_witness && self.use_segwit_serialization();
         // extra 2 bytes for segwit marker and flag
         let base: usize = if use_segwit_serialization { 10 } else { 8 };
-
 
         // for doge coin, we do not have witness for input, so we removed this from the BTC gadget
 
@@ -205,20 +223,24 @@ impl DogeAuxPowCoinbaseTransaction {
         if use_segwit_serialization {
             // segwit serialization
             if bytes.len() - read_index < 2 {
-                return Err(anyhow::anyhow!("Invalid bytes length for segwit marker and flag"));
+                return Err(anyhow::anyhow!(
+                    "Invalid bytes length for segwit marker and flag"
+                ));
             }
             if bytes[read_index] != SEGWIT_FLAG {
                 return Err(anyhow::anyhow!("Invalid segwit marker"));
             }
             read_index += 1; // skip flag
-            inputs_len = decode_varuint_partial(&bytes[read_index..]).map_err(|e| anyhow::anyhow!("{:?}", e))?;
+            inputs_len = decode_varuint_partial(&bytes[read_index..])
+                .map_err(|e| anyhow::anyhow!("{:?}", e))?;
             read_index += inputs_len.1;
         }
 
         let inputs_size = inputs_len.0 as usize;
         //let mut inputs = vec![];
         for _ in 0..inputs_size {
-            let (_script_size, offset) = DogeAuxPowCoinbaseTransactionInput::skip_decode(bytes, read_index)?;
+            let (_script_size, offset) =
+                DogeAuxPowCoinbaseTransactionInput::skip_decode(bytes, read_index)?;
             //inputs.push(input);
             // if any input has empty script, we use segwit serialization
             //use_segwit_serialization = use_segwit_serialization || script_size == 0;
@@ -246,7 +268,8 @@ impl DogeAuxPowCoinbaseTransaction {
         }
         if use_segwit_serialization {
             for _ in 0..inputs_size {
-                let offset = DogeAuxPowCoinbaseTransactionInput::skip_decode_witness(bytes, read_index)?;
+                let offset =
+                    DogeAuxPowCoinbaseTransactionInput::skip_decode_witness(bytes, read_index)?;
                 read_index = offset;
             }
         }
@@ -309,23 +332,24 @@ impl DogeAuxPowCoinbaseTransaction {
         if use_segwit_serialization {
             // segwit serialization
             if total_remaining < 32 + 4 + 4 + 1 + 2 {
-                return Err(anyhow::anyhow!("Invalid bytes length for segwit marker and flag"));
+                return Err(anyhow::anyhow!(
+                    "Invalid bytes length for segwit marker and flag"
+                ));
             }
             if bytes[read_index] != SEGWIT_FLAG {
                 return Err(anyhow::anyhow!("Invalid segwit marker"));
             }
             read_index += 1; // skip flag
-            inputs_len = decode_varuint_partial(&bytes[read_index..]).map_err(|e| anyhow::anyhow!("{:?}", e))?;
+            inputs_len = decode_varuint_partial(&bytes[read_index..])
+                .map_err(|e| anyhow::anyhow!("{:?}", e))?;
             read_index += inputs_len.1;
         }
-
-
-
 
         let inputs_size = inputs_len.0 as usize;
         let mut inputs = vec![];
         for _ in 0..inputs_size {
-            let (input, offset) = DogeAuxPowCoinbaseTransactionInput::standard_from_bytes(bytes, read_index)?;
+            let (input, offset) =
+                DogeAuxPowCoinbaseTransactionInput::standard_from_bytes(bytes, read_index)?;
             inputs.push(input);
             read_index = offset;
         }
@@ -349,7 +373,6 @@ impl DogeAuxPowCoinbaseTransaction {
                 read_index = offset;
             }
         }
-
 
         let locktime = u32::from_le_bytes(bytes[read_index..(read_index + 4)].try_into().unwrap());
         Ok((
@@ -418,7 +441,8 @@ impl DogeAuxPowCoinbaseTransactionInput {
         bytes
     }
     pub fn witness_to_bytes(&self) -> Vec<u8> {
-        let mut bytes = Vec::with_capacity(varuint_size(self.witness_element_count) + self.witness_raw.len());
+        let mut bytes =
+            Vec::with_capacity(varuint_size(self.witness_element_count) + self.witness_raw.len());
         let len = encode_varuint(self.witness_element_count); //serialize(&VarInt(self.witness_element_count));
         bytes.extend(len);
         bytes.extend(&self.witness_raw);
@@ -460,22 +484,26 @@ impl DogeAuxPowCoinbaseTransactionInput {
         ))
     }
     pub fn augment_with_witness(&mut self, bytes: &[u8], offset: usize) -> anyhow::Result<usize> {
-        let (witness_element_count, witness_raw, read_index) = Self::witness_from_bytes(bytes, offset)?;
+        let (witness_element_count, witness_raw, read_index) =
+            Self::witness_from_bytes(bytes, offset)?;
         self.witness_element_count = witness_element_count;
         self.witness_raw = witness_raw;
         Ok(read_index)
     }
-    pub fn witness_from_bytes(bytes: &[u8], offset: usize) -> anyhow::Result<(u64, Vec<u8>, usize)> {
+    pub fn witness_from_bytes(
+        bytes: &[u8],
+        offset: usize,
+    ) -> anyhow::Result<(u64, Vec<u8>, usize)> {
         let mut read_index = offset;
         let (witness_elem_count, witness_elem_count_size): (u64, usize) =
             decode_varuint_partial(&bytes[read_index..]).map_err(|e| anyhow::anyhow!("{:?}", e))?;
         read_index += witness_elem_count_size;
         let mut witnesss_size = 0;
         let witness_start_index = read_index;
-        
+
         for _ in 0..witness_elem_count {
-            let elem_len: (u64, usize) =
-                decode_varuint_partial(&bytes[read_index..]).map_err(|e| anyhow::anyhow!("{:?}", e))?;
+            let elem_len: (u64, usize) = decode_varuint_partial(&bytes[read_index..])
+                .map_err(|e| anyhow::anyhow!("{:?}", e))?;
             let full_size = elem_len.1 + (elem_len.0 as usize);
             if bytes.len() - read_index < full_size {
                 return Err(anyhow::anyhow!("Invalid bytes length"));
@@ -484,8 +512,8 @@ impl DogeAuxPowCoinbaseTransactionInput {
             witnesss_size += full_size;
         }
 
-
-        let witness_raw = bytes[witness_start_index..(witness_start_index + witnesss_size)].to_vec();
+        let witness_raw =
+            bytes[witness_start_index..(witness_start_index + witnesss_size)].to_vec();
         Ok((witness_elem_count, witness_raw, read_index))
     }
     pub fn skip_decode(bytes: &[u8], offset: usize) -> anyhow::Result<(u64, usize)> {
@@ -518,8 +546,8 @@ impl DogeAuxPowCoinbaseTransactionInput {
         read_index += witness_element_count_size;
 
         for _ in 0..witness_element_count {
-            let elem_len: (u64, usize) =
-                decode_varuint_partial(&bytes[read_index..]).map_err(|e| anyhow::anyhow!("{:?}", e))?;
+            let elem_len: (u64, usize) = decode_varuint_partial(&bytes[read_index..])
+                .map_err(|e| anyhow::anyhow!("{:?}", e))?;
             let full_size = elem_len.1 + (elem_len.0 as usize);
             if bytes.len() - read_index < full_size {
                 return Err(anyhow::anyhow!("Invalid bytes length"));

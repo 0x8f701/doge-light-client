@@ -1,11 +1,21 @@
 use doge_light_client::{block_state::PsyBridgeHeader, common_types::QHash256};
 
-
-
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
-#[cfg_attr(feature = "serialize_bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
+#[cfg_attr(
+    feature = "serialize_bytemuck",
+    derive(bytemuck::Pod, bytemuck::Zeroable)
+)]
 #[derive(PartialEq, Clone, Debug, Eq, Ord, PartialOrd, Copy, Hash, Default)]
 #[repr(C)]
 pub struct PsyContractBridgeState {
@@ -36,11 +46,9 @@ impl PsyContractBridgeState {
 // END: Bridge Contract Serialization Logic
 
 // START: Bridge Contract Internal Function Logic
-impl PsyContractBridgeState {
-}
+impl PsyContractBridgeState {}
 // END: Bridge Contract Internal Function Logic
 
 // START: Bridge Contract Instruction Function Logic
-impl PsyContractBridgeState {
-}
+impl PsyContractBridgeState {}
 // END: Bridge Contract Instruction Function Logic

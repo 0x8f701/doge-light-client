@@ -16,19 +16,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
 with contributions from Carter Feldman (https://x.com/cmpeq)."
 */
 
-use psy_doge_data_link::{link_sync::{
-    block_header_cache::BlockHeaderFetcher, bridge_state_helpers::gen_bridge_initial_state,
-    electrs_link::DogeLinkElectrsClient,
-}, traits::QDogeBlockHeaderFetcher};
 use doge_light_client::{constants::DogeMainNetConfig, network_params::DogeNetworkType};
+use psy_doge_data_link::{
+    link_sync::{
+        block_header_cache::BlockHeaderFetcher, bridge_state_helpers::gen_bridge_initial_state,
+        electrs_link::DogeLinkElectrsClient,
+    },
+    traits::QDogeBlockHeaderFetcher,
+};
 
 //const QDOGE_BRIDGE_REQUIRED_CONFIRMATIONS: usize = 4;
 const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize = 32;

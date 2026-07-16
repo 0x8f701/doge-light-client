@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -30,8 +30,6 @@ use doge_light_client::core_data::QDogeBlockHeader;
 use serde::{Deserialize, Serialize};
 
 use crate::{link_sync::electrs_link::DogeLinkElectrsClient, traits::QDogeBlockHeaderFetcher};
-
-
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Default)]
 pub struct BlockHeaderWithIndex {
@@ -56,8 +54,15 @@ impl BlockHeaderFetcher {
         if let Some(header) = self.store.get(&height) {
             return Ok(header.clone());
         }
-        let header = self.client.get_qd_block(height as u32)?.to_qdoge_block_header();
-        println!("fetched block header at height {}:\n{}", height, hex::encode(borsh::to_vec(&header)?));
+        let header = self
+            .client
+            .get_qd_block(height as u32)?
+            .to_qdoge_block_header();
+        println!(
+            "fetched block header at height {}:\n{}",
+            height,
+            hex::encode(borsh::to_vec(&header)?)
+        );
         self.store.insert(height, header.clone());
         Ok(header)
     }
@@ -66,28 +71,40 @@ impl BlockHeaderFetcher {
         if let Some(header) = self.store.get(&height) {
             return Ok(header.clone());
         }
-        let header = self.client.get_qd_block(height as u32)?.to_qdoge_block_header();
+        let header = self
+            .client
+            .get_qd_block(height as u32)?
+            .to_qdoge_block_header();
         Ok(header)
     }
 
     pub fn get_block_headers(&mut self, heights: &[u32]) -> anyhow::Result<Vec<QDogeBlockHeader>> {
         let mut block_headers = Vec::with_capacity(heights.len());
-        for h in heights.iter(){
+        for h in heights.iter() {
             block_headers.push(self.get_block_header(*h)?);
         }
         Ok(block_headers)
     }
     pub fn get_block_headers_imm(&self, heights: &[u32]) -> anyhow::Result<Vec<QDogeBlockHeader>> {
         let mut block_headers = Vec::with_capacity(heights.len());
-        for h in heights.iter(){
+        for h in heights.iter() {
             block_headers.push(self.get_block_header_imm(*h)?);
         }
         Ok(block_headers)
     }
     pub fn to_block_headers(&self) -> Vec<BlockHeaderWithIndex> {
-        let mut block_headers = self.store.iter().collect::<Vec<(&u32, &QDogeBlockHeader)>>();
+        let mut block_headers = self
+            .store
+            .iter()
+            .collect::<Vec<(&u32, &QDogeBlockHeader)>>();
         block_headers.sort_by(|a, b| a.0.cmp(b.0));
-        block_headers.iter().map(|(h, b)| BlockHeaderWithIndex{height: **h, block_header: (*b).clone()}).collect()
+        block_headers
+            .iter()
+            .map(|(h, b)| BlockHeaderWithIndex {
+                height: **h,
+                block_header: (*b).clone(),
+            })
+            .collect()
     }
     pub fn save_block_headers_bin(&self, path: &str) -> anyhow::Result<()> {
         let block_headers = self.to_block_headers();
@@ -119,7 +136,6 @@ impl BlockHeaderFetcher {
     }
 }
 
-
 impl QDogeBlockHeaderFetcher for BlockHeaderFetcher {
     fn get_qdoge_block_header(&self, height: u32) -> anyhow::Result<QDogeBlockHeader> {
         self.get_block_header_imm(height)
@@ -133,7 +149,10 @@ impl QDogeBlockHeaderFetcher for BlockHeaderFetcher {
         self.get_block_header(height)
     }
 
-    fn get_qdoge_block_headers_cache(&mut self, heights: &[u32]) -> anyhow::Result<Vec<QDogeBlockHeader>> {
+    fn get_qdoge_block_headers_cache(
+        &mut self,
+        heights: &[u32],
+    ) -> anyhow::Result<Vec<QDogeBlockHeader>> {
         self.get_block_headers(heights)
     }
 }

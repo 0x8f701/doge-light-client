@@ -40,7 +40,6 @@ fn main() {
 
     println!("ttl: {}", ttl);
 
-
     let bridge_public_key_hash = BTCAddress160::from_str("nidKRv4eeRaLzngA34r8epXFNnJS54GJ1R")
         .unwrap()
         .address;

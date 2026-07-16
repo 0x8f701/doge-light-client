@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -36,5 +36,8 @@ pub trait QDogeBlockHeaderFetcher {
     fn get_qdoge_block_header(&self, height: u32) -> anyhow::Result<QDogeBlockHeader>;
     fn get_qdoge_block_headers(&self, heights: &[u32]) -> anyhow::Result<Vec<QDogeBlockHeader>>;
     fn get_qdoge_block_header_cache(&mut self, height: u32) -> anyhow::Result<QDogeBlockHeader>;
-    fn get_qdoge_block_headers_cache(&mut self, heights: &[u32]) -> anyhow::Result<Vec<QDogeBlockHeader>>;
+    fn get_qdoge_block_headers_cache(
+        &mut self,
+        heights: &[u32],
+    ) -> anyhow::Result<Vec<QDogeBlockHeader>>;
 }

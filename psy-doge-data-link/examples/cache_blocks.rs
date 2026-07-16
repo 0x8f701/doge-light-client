@@ -16,16 +16,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
 with contributions from Carter Feldman (https://x.com/cmpeq)."
 */
 
-use psy_doge_data_link::link_sync::{block_cache::BlockFetcher, electrs_link::DogeLinkElectrsClient};
 use doge_light_client::network_params::DogeNetworkType;
+use psy_doge_data_link::link_sync::{
+    block_cache::BlockFetcher, electrs_link::DogeLinkElectrsClient,
+};
 
 fn run_cache_blocks(
     start_block: u32,
@@ -39,9 +41,7 @@ fn run_cache_blocks(
 
     let binding = (start_block..end_block).collect::<Vec<u32>>();
     let chunks = binding.chunks(10);
-    
 
-    
     for c in chunks {
         let _blocks = cache.get_blocks(c)?;
         cache.save_blocks_bin(file_path)?;
@@ -55,7 +55,7 @@ fn main() {
 
     let start_block = 7655400;
     let count = 1000;
-    let end_block = start_block+count as u32;
+    let end_block = start_block + count as u32;
 
     run_cache_blocks(
         start_block,
@@ -64,7 +64,11 @@ fn main() {
             "https://doge-electrs-testnet-demo.qed.me".to_string(),
             DogeNetworkType::TestNet,
         ),
-        format!("test_blocks/testnet_blocks_{}-{}.bin", start_block, end_block).as_str(),
+        format!(
+            "test_blocks/testnet_blocks_{}-{}.bin",
+            start_block, end_block
+        )
+        .as_str(),
     )
     .unwrap();
 }

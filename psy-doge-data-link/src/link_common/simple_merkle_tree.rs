@@ -1,9 +1,11 @@
 use std::{collections::HashMap, marker::PhantomData};
 
-use doge_light_client::hash::{merkle::{delta_merkle_proof::DeltaMerkleProofCore, merkle_proof::MerkleProofCore}, traits::{MerkleHasher, ZeroableHash}};
+use doge_light_client::hash::{
+    merkle::{delta_merkle_proof::DeltaMerkleProofCore, merkle_proof::MerkleProofCore},
+    traits::{MerkleHasher, ZeroableHash},
+};
 
 use super::simple_merkle_node::SimpleMerkleNodeKey;
-
 
 #[derive(Clone)]
 pub struct SimpleMerkleTree<Hasher, Hash: Copy + PartialEq + Default> {
@@ -17,7 +19,6 @@ impl<Hasher: MerkleHasher<Hash>, Hash: Copy + PartialEq + Default + ZeroableHash
     SimpleMerkleTree<Hasher, Hash>
 {
     pub fn new(height: u8) -> Self {
-
         let mut zero_hash = Hash::get_zero_value();
         let mut zero_value_hashes = Vec::with_capacity((height + 1) as usize);
         for _ in 0..(height + 1) {
@@ -324,10 +325,9 @@ impl<Hasher: MerkleHasher<Hash>, Hash: Copy + PartialEq + Default + ZeroableHash
                 *v,
             );
         }
-        
+
         Ok(self.rehash_sub_tree_dmp(sub_tree_height, sub_tree_index))
     }
-
 
     pub fn set_leaf(&mut self, index: u64, value: Hash) -> DeltaMerkleProofCore<Hash> {
         let old_proof = self.get_leaf(index);

@@ -1,10 +1,21 @@
 use crate::{common_types::QHash256, hash::sha256_impl::hash_impl_sha256_bytes};
 
-
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
-#[cfg_attr(feature = "serialize_bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
+#[cfg_attr(
+    feature = "serialize_bytemuck",
+    derive(bytemuck::Pod, bytemuck::Zeroable)
+)]
 #[derive(PartialEq, Clone, Debug, Eq, Ord, PartialOrd, Copy, Hash, Default)]
 #[repr(C)]
 pub struct PsyBridgeStateCommitment {
@@ -16,10 +27,22 @@ pub struct PsyBridgeStateCommitment {
     pub block_height: u32,
 }
 
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
-#[cfg_attr(feature = "serialize_bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
+#[cfg_attr(
+    feature = "serialize_bytemuck",
+    derive(bytemuck::Pod, bytemuck::Zeroable)
+)]
 #[derive(PartialEq, Clone, Debug, Eq, Ord, PartialOrd, Copy, Hash, Default)]
 #[repr(C)]
 pub struct PsyBridgeHeader {
@@ -30,7 +53,6 @@ pub struct PsyBridgeHeader {
     pub last_rollback_at_secs: u32,
     pub paused_until_secs: u32,
     pub total_finalized_fees_collected_chain_history: u64,
-
     //pub auto_collected_fees_from_finalized_to_tip_stats: u64,
 }
 
@@ -93,5 +115,35 @@ mod tests {
         let hash = header.get_hash_bm();
 
         println!("Bridge Header Hash: {}", hex::encode(hash));
+    }
+}
+
+#[cfg(test)]
+mod b14_layout_nails {
+    use super::*;
+    use core::mem::size_of;
+
+    #[test]
+    fn b14_light_client_header_sizes() {
+        // Light-client layouts (must match bytemuck Pod sizes)
+        assert_eq!(
+            size_of::<PsyBridgeStateCommitment>(),
+            136,
+            "light PsyBridgeStateCommitment"
+        );
+        assert_eq!(
+            size_of::<PsyBridgeHeader>(),
+            320,
+            "light PsyBridgeHeader total"
+        );
+        // tip_state is the SAME type as finalized_state (full 136B commitment)
+        // whereas psy-bridge-core tip is PsyBridgeTipStateCommitment (72B)
+        // and finalized is 200B (extra pending_mints + txo_list hashes).
+        // Totals both 320, but field offsets DIVERGE — guest B14 field-by-field
+        // checks are required (and now partially present on devnet).
+        assert_eq!(
+            size_of::<PsyBridgeStateCommitment>() * 2 + 32 + 4 + 4 + 8,
+            320
+        );
     }
 }

@@ -16,26 +16,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
 with contributions from Carter Feldman (https://x.com/cmpeq)."
 */
 
-
 pub mod hex_array_32 {
-    use serde::{Deserialize, Deserializer, Serializer};
     use serde::de::Error;
-    
+    use serde::{Deserialize, Deserializer, Serializer};
+
     pub fn serialize<S>(bytes: &[u8; 32], serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
         serializer.serialize_str(&hex::encode(bytes))
     }
-    
+
     pub fn deserialize<'de, D>(deserializer: D) -> Result<[u8; 32], D::Error>
     where
         D: Deserializer<'de>,
@@ -43,27 +42,29 @@ pub mod hex_array_32 {
         let s = String::deserialize(deserializer)?;
         let bytes = hex::decode(s).map_err(D::Error::custom)?;
         if bytes.len() != 32 {
-            return Err(D::Error::custom(format!("Expected 32 bytes, got {}", bytes.len())));
+            return Err(D::Error::custom(format!(
+                "Expected 32 bytes, got {}",
+                bytes.len()
+            )));
         }
-        
+
         let mut array = [0u8; 32];
         array.copy_from_slice(&bytes);
         Ok(array)
     }
 }
 
-
 pub mod hex_array_80 {
-    use serde::{Deserialize, Deserializer, Serializer};
     use serde::de::Error;
-    
+    use serde::{Deserialize, Deserializer, Serializer};
+
     pub fn serialize<S>(bytes: &[u8; 80], serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
         serializer.serialize_str(&hex::encode(bytes))
     }
-    
+
     pub fn deserialize<'de, D>(deserializer: D) -> Result<[u8; 80], D::Error>
     where
         D: Deserializer<'de>,
@@ -71,9 +72,12 @@ pub mod hex_array_80 {
         let s = String::deserialize(deserializer)?;
         let bytes = hex::decode(s).map_err(D::Error::custom)?;
         if bytes.len() != 80 {
-            return Err(D::Error::custom(format!("Expected 80 bytes, got {}", bytes.len())));
+            return Err(D::Error::custom(format!(
+                "Expected 80 bytes, got {}",
+                bytes.len()
+            )));
         }
-        
+
         let mut array = [0u8; 80];
         array.copy_from_slice(&bytes);
         Ok(array)

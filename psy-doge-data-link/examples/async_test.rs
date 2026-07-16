@@ -1,7 +1,11 @@
 use bitcoin::Block;
-use doge_light_client::{core_data::{QDogeBlock, QDogeBlockHeader}, doge::transaction::BTCTransaction};
-use psy_doge_data_link::{link_async::DogeElectrsClient, link_common::bitcoin_convert::btc_block_to_qdoge};
-
+use doge_light_client::{
+    core_data::{QDogeBlock, QDogeBlockHeader},
+    doge::transaction::BTCTransaction,
+};
+use psy_doge_data_link::{
+    link_async::DogeElectrsClient, link_common::bitcoin_convert::btc_block_to_qdoge,
+};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -24,11 +28,14 @@ async fn main() -> anyhow::Result<()> {
         println!("QDoge block serialization matches raw bytes from electrs.");
     }
     let btc_header = btc_block.header.clone();
-    let qdoge_header = QDogeBlockHeader::from_consensus_bytes(&bitcoin::consensus::serialize(&btc_header))?;
+    let qdoge_header =
+        QDogeBlockHeader::from_consensus_bytes(&bitcoin::consensus::serialize(&btc_header))?;
     let qdoge_header_bytes = qdoge_header.to_consensus_bytes();
     let btc_header_bytes = bitcoin::consensus::serialize(&btc_header);
     if qdoge_header_bytes != btc_header_bytes {
-        anyhow::bail!("QDoge block header serialization does not match BTC block header serialization!");
+        anyhow::bail!(
+            "QDoge block header serialization does not match BTC block header serialization!"
+        );
     } else {
         println!("QDoge block header serialization matches BTC block header serialization.");
     }
@@ -57,18 +64,17 @@ async fn main() -> anyhow::Result<()> {
         if round_trip != q_bytes {
             anyhow::bail!("Transaction round-trip serialization mismatch!");
         }
-        println!("Transaction serialization/deserialization matches for txid {}", btx.txid());
-
+        println!(
+            "Transaction serialization/deserialization matches for txid {}",
+            btx.txid()
+        );
     }
-
-
-
 
     Ok(())
 }
 
 /*
-thread 'main' (228455047) panicked at /Users/carter/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-0.2.25/src/time/driver/handle.rs:24:32:
+thread 'main' panicked at $HOME/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-0.2.25/src/time/driver/handle.rs:24:32:
 there is no timer running, must be called from the context of a Tokio 0.2.x runtime
 stack backtrace:
 

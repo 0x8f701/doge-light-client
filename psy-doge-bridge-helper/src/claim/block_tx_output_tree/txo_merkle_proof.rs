@@ -1,12 +1,30 @@
-use doge_light_client::{common_types::QHash256, hash::sha256_impl::hash_impl_sha256_two_to_one_bytes};
+use doge_light_client::{
+    common_types::QHash256, hash::sha256_impl::hash_impl_sha256_two_to_one_bytes,
+};
 
-use crate::claim::block_tx_output_tree::{TXO_TREE_INDEX_BITS_BLOCK_NUM_LENGTH, TXO_TREE_INDEX_BITS_TOP_OUTPUT_NUM_LENGTH, TXO_TREE_INDEX_BITS_TX_NUM_LENGTH, get_output_in_tx_merkle_index_bit_index, get_output_in_tx_merkle_index_bit_index_byte_index_bit_mask};
+use crate::claim::block_tx_output_tree::{
+    get_output_in_tx_merkle_index_bit_index,
+    get_output_in_tx_merkle_index_bit_index_byte_index_bit_mask,
+    TXO_TREE_INDEX_BITS_BLOCK_NUM_LENGTH, TXO_TREE_INDEX_BITS_TOP_OUTPUT_NUM_LENGTH,
+    TXO_TREE_INDEX_BITS_TX_NUM_LENGTH,
+};
 
-
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
-#[cfg_attr(feature = "serialize_bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
+#[cfg_attr(
+    feature = "serialize_bytemuck",
+    derive(bytemuck::Pod, bytemuck::Zeroable)
+)]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Copy)]
 #[repr(C)]
 pub struct TXOOutputInTransactionMerkleProofPartial {
@@ -43,11 +61,22 @@ impl TXOOutputInTransactionMerkleProofPartial {
     }
 }
 
-
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
-#[cfg_attr(feature = "serialize_bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
+#[cfg_attr(
+    feature = "serialize_bytemuck",
+    derive(bytemuck::Pod, bytemuck::Zeroable)
+)]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Copy)]
 #[repr(C)]
 pub struct TXOOutputInTransactionDeltaMerkleProofPartial {
@@ -65,7 +94,8 @@ impl TXOOutputInTransactionDeltaMerkleProofPartial {
         output_index: u16,
         new_bit: u8,
     ) -> Self {
-        let (merkle_index, bit_index, byte_index, bit_mask) = get_output_in_tx_merkle_index_bit_index_byte_index_bit_mask(output_index);
+        let (merkle_index, bit_index, byte_index, bit_mask) =
+            get_output_in_tx_merkle_index_bit_index_byte_index_bit_mask(output_index);
         Self {
             old_bit: old_value[byte_index as usize] >> bit_mask & 1,
             old_value,
@@ -80,9 +110,11 @@ impl TXOOutputInTransactionDeltaMerkleProofPartial {
         let mut current_new = self.old_value;
         // Apply the bit change
         if self.new_bit == 1 {
-            current_new[(self.bit_index_in_leaf >> 3) as usize] |= 1 << (self.bit_index_in_leaf & 7);
+            current_new[(self.bit_index_in_leaf >> 3) as usize] |=
+                1 << (self.bit_index_in_leaf & 7);
         } else {
-            current_new[(self.bit_index_in_leaf >> 3) as usize] &= !(1 << (self.bit_index_in_leaf & 7));
+            current_new[(self.bit_index_in_leaf >> 3) as usize] &=
+                !(1 << (self.bit_index_in_leaf & 7));
         }
         let mut index = self.merkle_index as u32;
         for i in 0..TXO_TREE_INDEX_BITS_TOP_OUTPUT_NUM_LENGTH {
@@ -102,10 +134,22 @@ impl TXOOutputInTransactionDeltaMerkleProofPartial {
     }
 }
 
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
-#[cfg_attr(feature = "serialize_bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
+#[cfg_attr(
+    feature = "serialize_bytemuck",
+    derive(bytemuck::Pod, bytemuck::Zeroable)
+)]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Copy)]
 #[repr(C)]
 pub struct TXONestedTransactionInBlockMerkleProofPartial {
@@ -131,12 +175,22 @@ impl TXONestedTransactionInBlockMerkleProofPartial {
     }
 }
 
-
-
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
-#[cfg_attr(feature = "serialize_bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
+#[cfg_attr(
+    feature = "serialize_bytemuck",
+    derive(bytemuck::Pod, bytemuck::Zeroable)
+)]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Copy)]
 #[repr(C)]
 pub struct TXONestedMerkleProofPartial {
@@ -161,4 +215,3 @@ impl TXONestedMerkleProofPartial {
         current
     }
 }
-

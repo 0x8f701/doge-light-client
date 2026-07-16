@@ -4,7 +4,6 @@ pub struct DepositManyHelper {
     pub wallet_manager: MemorySecp256K1Wallet,
 }
 
-
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     Ok(())

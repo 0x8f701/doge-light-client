@@ -1,6 +1,5 @@
 use doge_light_client::{common_types::QHash256, hash::sha256_impl::hash_impl_sha256_bytes};
 
-
 const MAX_PENDING_MINTS_PER_GROUP: usize = 24;
 /*
 #[repr(C)]
@@ -36,7 +35,6 @@ impl PendingMintsGroupsBuilder {
         let mut group_hashes_buffer = Vec::with_capacity(2 + total_groups_hint * 32);
         group_hashes_buffer.extend_from_slice(&[0u8; 2]);
 
-
         Self {
             group_hashes_buffer: group_hashes_buffer,
             current_group: vec![0u8; MAX_PENDING_MINTS_PER_GROUP * PENDING_MINT_SIZE],
@@ -45,29 +43,34 @@ impl PendingMintsGroupsBuilder {
         }
     }
 
-    pub fn append_pending_mint(&mut self, recipient_solana_public_key: &[u8; 32], amount: u64)  {
-
+    pub fn append_pending_mint(&mut self, recipient_solana_public_key: &[u8; 32], amount: u64) {
         let amount_bytes = amount.to_le_bytes();
         if self.next_item_in_group_index == MAX_PENDING_MINTS_PER_GROUP {
-            let hash = hash_impl_sha256_bytes(&self.current_group[..MAX_PENDING_MINTS_PER_GROUP * PENDING_MINT_SIZE]);
+            let hash = hash_impl_sha256_bytes(
+                &self.current_group[..MAX_PENDING_MINTS_PER_GROUP * PENDING_MINT_SIZE],
+            );
             self.group_hashes_buffer.extend_from_slice(&hash);
             self.next_item_in_group_index = 0;
             self.total_groups += 1;
         }
 
-
-        self.current_group[self.next_item_in_group_index * PENDING_MINT_SIZE..self.next_item_in_group_index * PENDING_MINT_SIZE + 32]
+        self.current_group[self.next_item_in_group_index * PENDING_MINT_SIZE
+            ..self.next_item_in_group_index * PENDING_MINT_SIZE + 32]
             .copy_from_slice(recipient_solana_public_key);
-        self.current_group[self.next_item_in_group_index * PENDING_MINT_SIZE + 32..self.next_item_in_group_index * PENDING_MINT_SIZE + 40]
+        self.current_group[self.next_item_in_group_index * PENDING_MINT_SIZE + 32
+            ..self.next_item_in_group_index * PENDING_MINT_SIZE + 40]
             .copy_from_slice(&amount_bytes);
         self.next_item_in_group_index += 1;
     }
 
     pub fn finalize(mut self) -> anyhow::Result<QHash256> {
         if self.total_groups != 0 || self.next_item_in_group_index > 0 {
-            let total_items = self.total_groups * MAX_PENDING_MINTS_PER_GROUP + self.next_item_in_group_index;
+            let total_items =
+                self.total_groups * MAX_PENDING_MINTS_PER_GROUP + self.next_item_in_group_index;
             if self.next_item_in_group_index > 0 {
-                let hash = hash_impl_sha256_bytes(&self.current_group[..self.next_item_in_group_index * PENDING_MINT_SIZE]);
+                let hash = hash_impl_sha256_bytes(
+                    &self.current_group[..self.next_item_in_group_index * PENDING_MINT_SIZE],
+                );
                 self.group_hashes_buffer.extend_from_slice(&hash);
                 self.total_groups += 1;
             }

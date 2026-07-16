@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -102,20 +102,24 @@ pub fn decode_varuint_partial(data: &[u8]) -> Result<(u64, usize), VaruintDecodi
         if data.len() < 3 {
             return Err(VaruintDecodingError);
         }
-        Ok((u64::from_le_bytes([data[1], data[2], 0, 0, 0, 0, 0, 0]),3))
+        Ok((u64::from_le_bytes([data[1], data[2], 0, 0, 0, 0, 0, 0]), 3))
     } else if first_byte == 0xfe {
         if data.len() < 5 {
             return Err(VaruintDecodingError);
         }
-        Ok((u64::from_le_bytes([
-            data[1], data[2], data[3], data[4], 0, 0, 0, 0,
-        ]),5))
+        Ok((
+            u64::from_le_bytes([data[1], data[2], data[3], data[4], 0, 0, 0, 0]),
+            5,
+        ))
     } else {
         if data.len() < 9 {
             return Err(VaruintDecodingError);
         }
-        Ok((u64::from_le_bytes([
-            data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8],
-        ]),9))
+        Ok((
+            u64::from_le_bytes([
+                data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8],
+            ]),
+            9,
+        ))
     }
 }

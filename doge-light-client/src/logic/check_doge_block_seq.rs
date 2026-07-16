@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -25,10 +25,13 @@ with contributions from Carter Feldman (https://x.com/cmpeq)."
 */
 
 use crate::{
-    constants::DogeNetworkConfig, common_types::QHash256, math::btc_difficulty::BTCDifficulty
+    common_types::QHash256, constants::DogeNetworkConfig, math::btc_difficulty::BTCDifficulty,
 };
 
-fn allow_min_difficulty_for_block<NC: DogeNetworkConfig>(current_block_time: i64, last_block_time: i64) -> bool {
+fn allow_min_difficulty_for_block<NC: DogeNetworkConfig>(
+    current_block_time: i64,
+    last_block_time: i64,
+) -> bool {
     NC::NETWORK_PARAMS.allow_min_difficulty_blocks
         && current_block_time > (last_block_time + NC::NETWORK_PARAMS.pow_target_spacing * 2)
 }
@@ -50,7 +53,7 @@ pub fn get_next_work_required<NC: DogeNetworkConfig>(
             first_block_time,
             NC::NETWORK_PARAMS.pow_target_timespan,
             &BTCDifficulty::new_from_bits(NC::NETWORK_PARAMS.pow_limit),
-            true
+            true,
         )
     }
 }
@@ -63,7 +66,6 @@ pub fn calc_dogecoin_next_work_required_full(
     pow_limit: &BTCDifficulty,
     f_digishield_difficulty_calculation: bool,
 ) -> u32 {
-    
     let actual_timespan = last_block_time - first_block_time;
     let mut modulated_timespan = actual_timespan;
     let mut min_timespan = pow_target_timespan / 16;
@@ -94,11 +96,7 @@ pub fn calc_dogecoin_next_work_required_full(
 
     let bn_new = BTCDifficulty::new_from_bits(last_bits);
 
-
-    let bn_new = bn_new.to_adjust_for_next_work(
-        modulated_timespan,
-        pow_target_timespan,
-    );
+    let bn_new = bn_new.to_adjust_for_next_work(modulated_timespan, pow_target_timespan);
 
     if bn_new.is_gt(pow_limit) {
         pow_limit.to_compact_bits()
@@ -109,24 +107,20 @@ pub fn calc_dogecoin_next_work_required_full(
 
 pub fn check_proof_of_work<NC: DogeNetworkConfig>(pow_hash: QHash256, n_bits: u32) -> bool {
     let difficulty = BTCDifficulty::new_from_bits_0_if_overflow(n_bits);
-    
+
     let mut reversed_pow_hash = pow_hash.clone();
     reversed_pow_hash.reverse();
 
     let pow_hash_dif = BTCDifficulty::new_from_hash(reversed_pow_hash);
 
-
     if difficulty.is_zero()
-        || difficulty.is_gt(&BTCDifficulty::new_from_bits(
-            NC::NETWORK_PARAMS.pow_limit,
-        ))
+        || difficulty.is_gt(&BTCDifficulty::new_from_bits(NC::NETWORK_PARAMS.pow_limit))
     {
         false
     } else {
         pow_hash_dif.is_leq(&difficulty)
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -135,8 +129,7 @@ mod tests {
 
     #[test]
     fn test_calc_next_work_mainnet_1() {
-
-        /* 
+        /*
         lastHeight: 145001,
         nFirstBlockTime: 1395094679,
         lastBlockTime: 1395094727,
@@ -144,7 +137,9 @@ mod tests {
         expectedNextBits: 0x1b6558a4,*/
 
         let pow_target_timespan_mainnet = 60;
-        let pow_limit_mainnet = BTCDifficulty::new_from_hash(hex_literal::hex!("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+        let pow_limit_mainnet = BTCDifficulty::new_from_hash(hex_literal::hex!(
+            "00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        ));
         let f_digishield_difficulty_calculation = true;
 
         let last_height = 145001;
@@ -152,17 +147,20 @@ mod tests {
         let last_bits = 0x1b671062;
         let first_block_time = 1395094679;
         let expected_next_bits = 0x1b6558a4;
-        let computed_next_bits  = calc_dogecoin_next_work_required_full(
+        let computed_next_bits = calc_dogecoin_next_work_required_full(
             last_height,
             last_block_time,
             last_bits,
             first_block_time,
             pow_target_timespan_mainnet,
             &pow_limit_mainnet,
-            f_digishield_difficulty_calculation
+            f_digishield_difficulty_calculation,
         );
 
-        assert_eq!(expected_next_bits, computed_next_bits, "expected_next_bits: {:x}, computed_next_bits: {:x}", expected_next_bits, computed_next_bits);
-
+        assert_eq!(
+            expected_next_bits, computed_next_bits,
+            "expected_next_bits: {:x}, computed_next_bits: {:x}",
+            expected_next_bits, computed_next_bits
+        );
     }
 }

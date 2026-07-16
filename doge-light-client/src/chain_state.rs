@@ -16,33 +16,56 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
 with contributions from Carter Feldman (https://x.com/cmpeq)."
 */
 
-use zerocopy::{U32, little_endian::U64};
+use zerocopy::{little_endian::U64, U32};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes, KnownLayout, Unaligned};
 
 use crate::{
-    block_data_tracker::{BlockDataRecord, BlockDataTracker}, common_types::QHash256, constants::DogeNetworkConfig, core_data::{QDogeBlockHeader, QDogeBlockHeaderAndClaimInfo}, error::{DogeBridgeError, QDogeResult}, hash::{merkle::fixed_append_tree::FixedMerkleAppendTree, sha256::QSha256Hasher}, init_params::InitBlockDataIBC, logic::check_doge_block::check_block_header_err
+    block_data_tracker::{BlockDataRecord, BlockDataTracker},
+    common_types::QHash256,
+    constants::DogeNetworkConfig,
+    core_data::{QDogeBlockHeader, QDogeBlockHeaderAndClaimInfo},
+    error::{DogeBridgeError, QDogeResult},
+    hash::{merkle::fixed_append_tree::FixedMerkleAppendTree, sha256::QSha256Hasher},
+    init_params::InitBlockDataIBC,
+    logic::check_doge_block::check_block_header_err,
 };
 
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, FromBytes, Immutable, KnownLayout, IntoBytes, Unaligned)]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    FromBytes,
+    Immutable,
+    KnownLayout,
+    IntoBytes,
+    Unaligned,
+)]
 #[repr(C)]
 pub struct QEDDogeChainStateCore<
     const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize,
     const QDOGE_BRIDGE_BLOCK_TREE_HEIGHT: usize,
-
 > {
-    pub block_data_tracker:
-        BlockDataTracker<QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE>,
+    pub block_data_tracker: BlockDataTracker<QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE>,
     pub block_tree_tracker: FixedMerkleAppendTree<QHash256, QDOGE_BRIDGE_BLOCK_TREE_HEIGHT>,
 }
 
@@ -51,16 +74,10 @@ type QBlockTreeTrackerHasher = QSha256Hasher;
 impl<
         const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize,
         const QDOGE_BRIDGE_BLOCK_TREE_HEIGHT: usize,
-    >
-    QEDDogeChainStateCore<
-        QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE,
-        QDOGE_BRIDGE_BLOCK_TREE_HEIGHT,
-    >
+    > QEDDogeChainStateCore<QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE, QDOGE_BRIDGE_BLOCK_TREE_HEIGHT>
 {
     pub fn new(
-        block_data_tracker: BlockDataTracker<
-            QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE,
-        >,
+        block_data_tracker: BlockDataTracker<QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE>,
         block_tree_tracker: FixedMerkleAppendTree<QHash256, QDOGE_BRIDGE_BLOCK_TREE_HEIGHT>,
     ) -> Self {
         Self {
@@ -84,7 +101,8 @@ impl<
         self.block_data_tracker.get_block_hash(block_number)
     }
     pub fn get_finalized_block_number(&self, required_confirmations: u32) -> u32 {
-        self.block_data_tracker.get_finalized_block_number(required_confirmations)
+        self.block_data_tracker
+            .get_finalized_block_number(required_confirmations)
     }
     pub fn get_tip_block_number(&self) -> u32 {
         self.block_data_tracker.get_tip_block_number()
@@ -146,8 +164,18 @@ impl<
 
         self.block_data_tracker
             .rollback_first(last_good_block_number, blocks.len())?;
-        for (i, (block, optional_aux_pow_hash)) in blocks.iter().zip(known_aux_pow_block_hashes).enumerate() {
-            self.append_block::<NC>(last_good_block_number + i as u32 + 1, &block.block_header, block.claimed_txo_tree_root, block.auto_claimed_deposits_tree_root, block.auto_claimed_deposits_next_index, block.fees_collected_for_block, *optional_aux_pow_hash)?;
+        for (i, (block, optional_aux_pow_hash)) in
+            blocks.iter().zip(known_aux_pow_block_hashes).enumerate()
+        {
+            self.append_block::<NC>(
+                last_good_block_number + i as u32 + 1,
+                &block.block_header,
+                block.claimed_txo_tree_root,
+                block.auto_claimed_deposits_tree_root,
+                block.auto_claimed_deposits_next_index,
+                block.fees_collected_for_block,
+                *optional_aux_pow_hash,
+            )?;
         }
 
         self.ensure_internal_consistency()?;
@@ -196,7 +224,6 @@ impl<
             .checked_add(fees_collected_for_block)
             .ok_or(DogeBridgeError::NumericalOverflow)?;
 
-
         self.block_tree_tracker
             .append::<QBlockTreeTrackerHasher>(new_block_hash);
         let block_hash_tree_root = self
@@ -222,7 +249,6 @@ impl<
         Ok(())
     }
 
-    
     pub fn from_init_data(
         init_data: &InitBlockDataIBC<
             QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE,
@@ -231,7 +257,8 @@ impl<
     ) -> Self {
         let tip_block_number = init_data.tip_block_number;
 
-        let start_block = tip_block_number.saturating_sub(QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE as u32 - 1u32);
+        let start_block =
+            tip_block_number.saturating_sub(QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE as u32 - 1u32);
 
         let mut append_tree =
             FixedMerkleAppendTree::<QHash256, QDOGE_BRIDGE_BLOCK_TREE_HEIGHT>::new_from_hasher::<
@@ -258,19 +285,15 @@ impl<
             (QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE - 1) as u16,
             records,
         );
-    
+
         Self::new(block_data_tracker, append_tree)
     }
-
-
 }
-
 
 #[cfg(test)]
 mod tests {
     #[test]
     fn deserialize_state() -> anyhow::Result<()> {
-
         Ok(())
     }
 }

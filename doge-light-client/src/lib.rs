@@ -16,25 +16,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
 with contributions from Carter Feldman (https://x.com/cmpeq)."
 */
+pub mod block_data_tracker;
+pub mod chain_state;
 pub mod common_types;
-pub mod logic;
-pub mod doge;
-pub mod core_data;
-pub mod hash;
 pub mod constants;
+pub mod core_data;
+pub mod doge;
+pub mod error;
+pub mod hash;
+pub mod init_params;
+pub mod logic;
 pub mod math;
 pub mod network_params;
-pub mod error;
-pub mod block_data_tracker;
-pub mod init_params;
-pub mod chain_state;
 #[cfg(feature = "serialize_serde")]
 pub mod serde_array;
 

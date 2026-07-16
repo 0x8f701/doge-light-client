@@ -1,9 +1,8 @@
-
 #[cfg(feature = "serialize_borsh")]
-use borsh::{BorshSerialize, BorshDeserialize};
+use borsh::{BorshDeserialize, BorshSerialize};
 use doge_light_client::error::DogeBridgeError;
 #[cfg(feature = "serialize_serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use num_derive::FromPrimitive;
 use thiserror::Error;
@@ -26,7 +25,6 @@ pub enum ZKPVerifyError {
     InvalidPublicInputsForBridgeZKP = 753,
 }
 
-
 #[cfg(feature = "solprogram")]
 impl solana_program::program_error::PrintProgramError for ZKPVerifyError {
     fn print<E>(&self) {
@@ -47,22 +45,28 @@ impl<T> solana_program::decode_error::DecodeError<T> for ZKPVerifyError {
     }
 }
 
-impl Into<DogeBridgeError> for ZKPVerifyError
-{
+impl Into<DogeBridgeError> for ZKPVerifyError {
     fn into(self) -> DogeBridgeError {
         match self {
             ZKPVerifyError::BridgeZKPError => DogeBridgeError::BridgeZKPError,
             ZKPVerifyError::InvalidBridgeInputZKP => DogeBridgeError::InvalidBridgeInputZKP,
-            ZKPVerifyError::InvalidVerifierKeyForBridgeZKP => DogeBridgeError::InvalidVerifierKeyForBridgeZKP,
-            ZKPVerifyError::InvalidPublicInputsForBridgeZKP => DogeBridgeError::InvalidPublicInputsForBridgeZKP,
+            ZKPVerifyError::InvalidVerifierKeyForBridgeZKP => {
+                DogeBridgeError::InvalidVerifierKeyForBridgeZKP
+            }
+            ZKPVerifyError::InvalidPublicInputsForBridgeZKP => {
+                DogeBridgeError::InvalidPublicInputsForBridgeZKP
+            }
         }
     }
 }
 
-
 pub trait TransitionZKPVerifier {
     fn verify_zkp(proof: &[u8], vkey: &[u8], public_inputs: &[u8]) -> Result<(), ZKPVerifyError>;
-    fn verify_bridge_zkp(proof: &[u8], vkey: &[u8], public_inputs: &[u8]) -> Result<(), DogeBridgeError> {
+    fn verify_bridge_zkp(
+        proof: &[u8],
+        vkey: &[u8],
+        public_inputs: &[u8],
+    ) -> Result<(), DogeBridgeError> {
         Self::verify_zkp(proof, vkey, public_inputs).map_err(|e| e.into())
     }
 }

@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -26,20 +26,23 @@ with contributions from Carter Feldman (https://x.com/cmpeq)."
 
 use std::str::FromStr;
 
-
 use borsh::{BorshDeserialize, BorshSerialize};
 
-use crate::{constants::{DogeMainNetConfig, DogeNetworkConfig, DogeRegTestConfig, DogeTestNetConfig}, common_types::QHash160, hash::{ripemd160::QBTCHash160Hasher, traits::BytesHasher}};
+use crate::{
+    common_types::QHash160,
+    constants::{DogeMainNetConfig, DogeNetworkConfig, DogeRegTestConfig, DogeTestNetConfig},
+    hash::{ripemd160::QBTCHash160Hasher, traits::BytesHasher},
+};
 
 use super::transaction::BTCTransactionOutput;
 
-
 #[cfg(feature = "serialize_serde")]
 use serde::{Deserialize, Serialize};
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
-#[derive(
-    PartialEq, Debug, Clone, Copy, Eq, Hash, PartialOrd, Ord,
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
 )]
+#[derive(PartialEq, Debug, Clone, Copy, Eq, Hash, PartialOrd, Ord)]
 pub enum BTCAddressType {
     P2PKH = 0,
     P2SH = 1,
@@ -57,7 +60,8 @@ impl Serialize for BTCAddressType {
 impl<'de> Deserialize<'de> for BTCAddressType {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de> {
+        D: serde::Deserializer<'de>,
+    {
         let value = <u8 as Deserialize>::deserialize(deserializer)?;
         BTCAddressType::try_from(value).map_err(serde::de::Error::custom)
     }
@@ -72,11 +76,11 @@ impl BorshDeserialize for BTCAddressType {
     fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
         let mut res = [0u8; 1];
         reader.read_exact(&mut res)?;
-       if res[0] == 0 {
+        if res[0] == 0 {
             Ok(BTCAddressType::P2PKH)
-        }else if res[0] == 1 {
+        } else if res[0] == 1 {
             Ok(BTCAddressType::P2SH)
-        }else{
+        } else {
             Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
                 "Invalid BTCAddressType type",
@@ -100,16 +104,13 @@ impl BTCAddressType {
             DogeMainNetConfig::P2PKH_VERSION_BYTE => Ok(BTCAddressType::P2PKH),
             DogeMainNetConfig::P2SH_VERSION_BYTE => Ok(BTCAddressType::P2SH),
 
-
             DogeTestNetConfig::P2PKH_VERSION_BYTE => Ok(BTCAddressType::P2PKH),
             DogeTestNetConfig::P2SH_VERSION_BYTE => Ok(BTCAddressType::P2SH),
-
 
             DogeRegTestConfig::P2PKH_VERSION_BYTE => Ok(BTCAddressType::P2PKH),
 
             // regtest p2sh is the same as testnet
             // DogeRegTestConfig::P2SH_VERSION_BYTE => Ok(BTCAddressType::P2SH),
-
             _ => Err(anyhow::format_err!(
                 "Invalid BTCAddressType version byte: {}",
                 version_byte
@@ -148,10 +149,18 @@ pub trait AddressToBTCScript {
     }
 }
 
-
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
 #[derive(PartialEq, Debug, Clone, Copy, Eq, Hash, PartialOrd, Ord)]
 pub struct BTCAddress160 {
     pub address_type: BTCAddressType,
@@ -160,7 +169,10 @@ pub struct BTCAddress160 {
 
 impl BTCAddress160 {
     pub fn try_from_string(str: &str) -> anyhow::Result<Self> {
-        let decoded = bs58::decode(str).with_check(None).into_vec().map_err(|e| anyhow::anyhow!("{:?}",e))?;
+        let decoded = bs58::decode(str)
+            .with_check(None)
+            .into_vec()
+            .map_err(|e| anyhow::anyhow!("{:?}", e))?;
         if decoded.len() != 21 {
             return Err(anyhow::format_err!(
                 "Invalid BTC address length: {}",
@@ -243,16 +255,16 @@ impl AddressToBTCScript for BTCAddress160 {
 
 pub fn gen_p2sh_script(hash: &QHash160) -> [u8; 23] {
     [
-        0xa9, 0x14, hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6],
-        hash[7], hash[8], hash[9], hash[10], hash[11], hash[12], hash[13],
-        hash[14], hash[15], hash[16], hash[17], hash[18], hash[19], 0x87,
+        0xa9, 0x14, hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6], hash[7],
+        hash[8], hash[9], hash[10], hash[11], hash[12], hash[13], hash[14], hash[15], hash[16],
+        hash[17], hash[18], hash[19], 0x87,
     ]
 }
 
 pub fn gen_p2pkh_script(hash: &QHash160) -> [u8; 25] {
     [
-        0x76, 0xa9, 0x14, hash[0], hash[1], hash[2], hash[3], hash[4], hash[5],
-        hash[6], hash[7], hash[8], hash[9], hash[10], hash[11], hash[12], hash[13],
-        hash[14], hash[15], hash[16], hash[17], hash[18], hash[19], 0x88, 0xac,
+        0x76, 0xa9, 0x14, hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6], hash[7],
+        hash[8], hash[9], hash[10], hash[11], hash[12], hash[13], hash[14], hash[15], hash[16],
+        hash[17], hash[18], hash[19], 0x88, 0xac,
     ]
 }

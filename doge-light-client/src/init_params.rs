@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -28,17 +28,32 @@ with contributions from Carter Feldman (https://x.com/cmpeq)."
 use borsh::{BorshDeserialize, BorshSerialize};
 
 use crate::{
-    block_data_tracker::BlockDataRecord, common_types::QHash256, core_data::{QDogeBlock, QDogeBlockHeader}, hash::{
-        sha256::QSha256Hasher,
-        traits::MerkleHasher,
-    }
+    block_data_tracker::BlockDataRecord,
+    common_types::QHash256,
+    core_data::{QDogeBlock, QDogeBlockHeader},
+    hash::{sha256::QSha256Hasher, traits::MerkleHasher},
 };
-const DEFAULT_AUTO_CLAIM_DEPOSITS_TREE_ROOT: QHash256 = [198, 246, 126, 2, 230, 228, 225, 189, 239, 185, 148, 198, 9, 137, 83, 243, 70, 54, 186, 43, 108, 162, 10, 71, 33, 210, 178, 106, 136, 103, 34, 255];
-const DEFAULT_TXO_TREE_ROOT: QHash256 = [250, 250, 48, 37, 242, 248, 149, 9, 194, 199, 28, 116, 251, 160, 205, 146, 133, 142, 244, 155, 7, 128, 251, 84, 121, 116, 108, 138, 155, 252, 179, 70];
+const DEFAULT_AUTO_CLAIM_DEPOSITS_TREE_ROOT: QHash256 = [
+    198, 246, 126, 2, 230, 228, 225, 189, 239, 185, 148, 198, 9, 137, 83, 243, 70, 54, 186, 43,
+    108, 162, 10, 71, 33, 210, 178, 106, 136, 103, 34, 255,
+];
+const DEFAULT_TXO_TREE_ROOT: QHash256 = [
+    250, 250, 48, 37, 242, 248, 149, 9, 194, 199, 28, 116, 251, 160, 205, 146, 133, 142, 244, 155,
+    7, 128, 251, 84, 121, 116, 108, 138, 155, 252, 179, 70,
+];
 
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct InitBlockDataRecord {
     pub block_hash: QHash256,

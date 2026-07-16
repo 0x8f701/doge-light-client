@@ -1,4 +1,13 @@
-use crate::{common_types::QHash256, hash::{sha256::btc_hash256_bytes, sha256_impl::{hash_impl_btc_hash256_two_to_one_bytes, hash_impl_sha256_bytes, hash_impl_sha256_two_to_one_bytes}}};
+use crate::{
+    common_types::QHash256,
+    hash::{
+        sha256::btc_hash256_bytes,
+        sha256_impl::{
+            hash_impl_btc_hash256_two_to_one_bytes, hash_impl_sha256_bytes,
+            hash_impl_sha256_two_to_one_bytes,
+        },
+    },
+};
 
 pub fn compute_dogecoin_last_transaction_in_block_merkle_root_in_memory(
     value: QHash256,
@@ -8,7 +17,7 @@ pub fn compute_dogecoin_last_transaction_in_block_merkle_root_in_memory(
     siblings_count: usize,
 ) -> Option<QHash256> {
     // 1. Sanity Checks
-    if claimed_total_transaction_count == 0 { 
+    if claimed_total_transaction_count == 0 {
         // we cannot have a block with 0 transactions, because of the coinbase
         return None;
     }
@@ -85,8 +94,6 @@ pub fn compute_dogecoin_block_transaction_merkle_proof_tree_root_in_memory(
     }
     Some(current)
 }
-
-
 
 pub fn compute_dogecoin_block_transaction_merkle_proof_tree_root_hash256(
     value: QHash256,

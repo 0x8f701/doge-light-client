@@ -1,4 +1,3 @@
-
 #[cfg(feature = "serialize_serde")]
 pub mod serde_arrays {
     use std::{convert::TryInto, marker::PhantomData};

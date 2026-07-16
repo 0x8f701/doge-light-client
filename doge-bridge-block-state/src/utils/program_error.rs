@@ -4,7 +4,6 @@ pub use solana_program::entrypoint::ProgramResult;
 #[cfg(feature = "solprogram")]
 pub use solana_program::program_error::ProgramError;
 
-
 #[cfg(all(not(feature = "solprogram"), feature = "std"))]
 pub type ProgramResult = std::result::Result<(), ProgramError>;
 
@@ -105,4 +104,3 @@ impl std::fmt::Display for ProgramError {
         }
     }
 }
-

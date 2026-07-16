@@ -1,13 +1,21 @@
 use doge_light_client::{common_types::QHash256, hash::sha256_impl::hash_impl_sha256_bytes};
 
-use crate::{claim::block_tx_output_tree::{TXO_MERKLE_TREE_HEIGHT, is_valid_siblings_length_for_txo_merkle_proof, is_valid_txo_merkle_index}, utils::bit_vector::{get_bit_in_bit_vector, set_bit_in_bit_vector_cloned}};
+use crate::{
+    claim::block_tx_output_tree::{
+        is_valid_siblings_length_for_txo_merkle_proof, is_valid_txo_merkle_index,
+        TXO_MERKLE_TREE_HEIGHT,
+    },
+    utils::bit_vector::{get_bit_in_bit_vector, set_bit_in_bit_vector_cloned},
+};
 
 pub fn compute_txo_merkle_root(
     output_bit_vector_leaf: QHash256,
     merkle_siblings: &[QHash256],
     txo_merkle_index: u64,
 ) -> QHash256 {
-    assert!(is_valid_siblings_length_for_txo_merkle_proof(merkle_siblings.len()));
+    assert!(is_valid_siblings_length_for_txo_merkle_proof(
+        merkle_siblings.len()
+    ));
     assert!(is_valid_txo_merkle_index(txo_merkle_index));
 
     let mut current = output_bit_vector_leaf;
@@ -25,11 +33,9 @@ pub fn compute_txo_merkle_root(
         index >>= 1;
     }
     assert!(index == 0);
-    
+
     current
 }
-
-
 
 pub fn compute_txo_merkle_proof_in_memory(
     output_bit_vector_leaf: QHash256,
@@ -55,13 +61,9 @@ pub fn compute_txo_merkle_proof_in_memory(
         index >>= 1;
     }
     assert!(index == 0);
-    
+
     current
 }
-
-
-
-
 
 pub fn compute_txo_delta_merkle_root(
     old_output_bit_vector_leaf: QHash256,
@@ -69,7 +71,9 @@ pub fn compute_txo_delta_merkle_root(
     merkle_siblings: &[QHash256],
     txo_merkle_index: u64,
 ) -> (QHash256, QHash256) {
-    assert!(is_valid_siblings_length_for_txo_merkle_proof(merkle_siblings.len()));
+    assert!(is_valid_siblings_length_for_txo_merkle_proof(
+        merkle_siblings.len()
+    ));
     assert!(is_valid_txo_merkle_index(txo_merkle_index));
 
     let mut current_old = old_output_bit_vector_leaf;
@@ -93,11 +97,9 @@ pub fn compute_txo_delta_merkle_root(
         index >>= 1;
     }
     assert!(index == 0);
-    
+
     (current_old, current_new)
 }
-
-
 
 pub fn compute_txo_delta_merkle_root_set_zero_bit_to_one(
     old_output_bit_vector_leaf: QHash256,
@@ -105,12 +107,17 @@ pub fn compute_txo_delta_merkle_root_set_zero_bit_to_one(
     merkle_siblings: &[QHash256],
     txo_merkle_index: u64,
 ) -> (QHash256, QHash256) {
-    assert!(is_valid_siblings_length_for_txo_merkle_proof(merkle_siblings.len()));
+    assert!(is_valid_siblings_length_for_txo_merkle_proof(
+        merkle_siblings.len()
+    ));
     assert!(is_valid_txo_merkle_index(txo_merkle_index));
-    assert!(!get_bit_in_bit_vector(&old_output_bit_vector_leaf, bit_index));
-    let new_output_bit_vector_leaf = set_bit_in_bit_vector_cloned(&old_output_bit_vector_leaf, bit_index);
+    assert!(!get_bit_in_bit_vector(
+        &old_output_bit_vector_leaf,
+        bit_index
+    ));
+    let new_output_bit_vector_leaf =
+        set_bit_in_bit_vector_cloned(&old_output_bit_vector_leaf, bit_index);
 
-    
     let mut current_old = old_output_bit_vector_leaf;
     let mut current_new = new_output_bit_vector_leaf;
     let mut index = txo_merkle_index;
@@ -132,6 +139,6 @@ pub fn compute_txo_delta_merkle_root_set_zero_bit_to_one(
         index >>= 1;
     }
     assert!(index == 0);
-    
+
     (current_old, current_new)
 }

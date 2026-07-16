@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -25,9 +25,9 @@ with contributions from Carter Feldman (https://x.com/cmpeq)."
 */
 
 #[cfg(feature = "serialize_borsh")]
-use borsh::{BorshSerialize, BorshDeserialize};
+use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(feature = "serialize_serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "serialize_serde")]
 use crate::serde_array::serde_arrays;
@@ -35,14 +35,42 @@ use crate::serde_array::serde_arrays;
 use zerocopy::little_endian::{U16, U32, U64};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes, Unaligned};
 
-use crate::{block_state::{PsyBridgeHeader, PsyBridgeStateCommitment}, common_types::QHash256, error::{DogeBridgeError, QDogeResult}};
+use crate::{
+    block_state::{PsyBridgeHeader, PsyBridgeStateCommitment},
+    common_types::QHash256,
+    error::{DogeBridgeError, QDogeResult},
+};
 
-
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
-#[cfg_attr(feature = "serialize_bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, FromBytes, IntoBytes, Immutable, Unaligned, Default)]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
+#[cfg_attr(
+    feature = "serialize_bytemuck",
+    derive(bytemuck::Pod, bytemuck::Zeroable)
+)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    FromBytes,
+    IntoBytes,
+    Immutable,
+    Unaligned,
+    Default,
+)]
 #[repr(C)]
 pub struct BlockDataRecord {
     pub block_hash_tree_root: QHash256,
@@ -56,10 +84,22 @@ pub struct BlockDataRecord {
     pub bits: U32,
 }
 
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
-#[cfg_attr(feature = "serialize_bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
+#[cfg_attr(
+    feature = "serialize_bytemuck",
+    derive(bytemuck::Pod, bytemuck::Zeroable)
+)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, FromBytes, IntoBytes, Default)]
 #[repr(C)]
 pub struct PoWBlockContext {
@@ -69,10 +109,23 @@ pub struct PoWBlockContext {
     pub first_block_time: u32,
 }
 
-
 #[cfg(feature = "serialize_serde")]
 #[cfg_attr(feature = "serialize_borsh", derive(BorshSerialize, BorshDeserialize))]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, FromBytes, Serialize, Deserialize, IntoBytes, Immutable, Unaligned)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    FromBytes,
+    Serialize,
+    Deserialize,
+    IntoBytes,
+    Immutable,
+    Unaligned,
+)]
 #[repr(C)]
 pub struct BlockDataTracker<const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize> {
     pub tip_block_number: U32,
@@ -82,7 +135,9 @@ pub struct BlockDataTracker<const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize> {
 }
 #[cfg(not(feature = "serialize_serde"))]
 #[cfg_attr(feature = "serialize_borsh", derive(BorshSerialize, BorshDeserialize))]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, FromBytes,  IntoBytes, Immutable, Unaligned)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, FromBytes, IntoBytes, Immutable, Unaligned,
+)]
 #[repr(C)]
 pub struct BlockDataTracker<const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize> {
     pub tip_block_number: U32,
@@ -90,8 +145,9 @@ pub struct BlockDataTracker<const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize> {
     pub records: [BlockDataRecord; QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE],
 }
 
-
-impl<const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize> BlockDataTracker<QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE> {
+impl<const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize>
+    BlockDataTracker<QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE>
+{
     /*
     fn new_empty() -> Self {
         BlockDataTracker {
@@ -119,7 +175,9 @@ impl<const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize> BlockDataTracker<QDOGE_BRI
     }
 
     pub fn get_tip_state_commitment(&self) -> PsyBridgeStateCommitment {
-        let record = self.get_record_ref(self.get_tip_block_number()).expect("Tip block must exist in tracker");
+        let record = self
+            .get_record_ref(self.get_tip_block_number())
+            .expect("Tip block must exist in tracker");
         PsyBridgeStateCommitment {
             block_hash: record.block_hash,
             block_merkle_tree_root: record.block_hash_tree_root,
@@ -129,7 +187,10 @@ impl<const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize> BlockDataTracker<QDOGE_BRI
             block_height: self.get_tip_block_number(),
         }
     }
-    pub fn get_finalized_state_commitment(&self, required_confirmations: u32) -> QDogeResult<PsyBridgeStateCommitment> {
+    pub fn get_finalized_state_commitment(
+        &self,
+        required_confirmations: u32,
+    ) -> QDogeResult<PsyBridgeStateCommitment> {
         let finalized_block_number = self.get_finalized_block_number(required_confirmations);
         let record = self.get_record(finalized_block_number)?;
         Ok(PsyBridgeStateCommitment {
@@ -161,8 +222,8 @@ impl<const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize> BlockDataTracker<QDOGE_BRI
                     header.block_height,
                     self.get_finalized_block_number(required_confirmations)
                 ));
-            }            
-        }else{
+            }
+        } else {
             if self.get_tip_block_number() != header.block_height {
                 return Err(anyhow::anyhow!(
                     "Block height {} is not the tip block number {} in block data tracker",
@@ -212,7 +273,7 @@ impl<const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize> BlockDataTracker<QDOGE_BRI
                 header.auto_claimed_deposits_next_index
             ));
         }
-        
+
         Ok(())
     }
 
@@ -231,13 +292,13 @@ impl<const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize> BlockDataTracker<QDOGE_BRI
     }
 
     pub fn get_pow_context(&self, block_number: u32) -> QDogeResult<PoWBlockContext> {
-        if block_number < 2 || !self.contains_block_range(block_number-2, block_number-1) {
+        if block_number < 2 || !self.contains_block_range(block_number - 2, block_number - 1) {
             return Err(DogeBridgeError::BlockNotInCache);
         }
-        let last_index  = self.get_index_for_block_unchecked(block_number-1);
-        let first_index  = self.get_index_for_block_unchecked(block_number-2);
+        let last_index = self.get_index_for_block_unchecked(block_number - 1);
+        let first_index = self.get_index_for_block_unchecked(block_number - 2);
         Ok(PoWBlockContext {
-            last_height: block_number-1,
+            last_height: block_number - 1,
             last_block_time: self.records[last_index].timestamp.into(),
             last_bits: self.records[last_index].bits.into(),
             first_block_time: self.records[first_index].timestamp.into(),
@@ -254,22 +315,31 @@ impl<const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize> BlockDataTracker<QDOGE_BRI
         self.tip_internal_index.into()
     }
 
-
-
     pub fn add_record(&mut self, record: BlockDataRecord) {
-        let new_tip_index = (self.get_tip_internal_index() as usize +1)%(QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE);
+        let new_tip_index =
+            (self.get_tip_internal_index() as usize + 1) % (QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE);
         self.records[new_tip_index] = record;
         self.tip_internal_index = (new_tip_index as u16).into();
         self.tip_block_number += 1;
     }
-    pub fn contains_block_range(&self, start_block_number_inclusive: u32, end_block_number_inclusive: u32) -> bool {
-        self.tip_block_number <= end_block_number_inclusive && start_block_number_inclusive > self.get_tip_block_number() - QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE as u32
+    pub fn contains_block_range(
+        &self,
+        start_block_number_inclusive: u32,
+        end_block_number_inclusive: u32,
+    ) -> bool {
+        self.tip_block_number <= end_block_number_inclusive
+            && start_block_number_inclusive
+                > self.get_tip_block_number() - QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE as u32
     }
     pub fn contains_block(&self, block_number: u32) -> bool {
-        block_number <= self.get_tip_block_number() && block_number > self.get_tip_block_number() - QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE as u32
+        block_number <= self.get_tip_block_number()
+            && block_number
+                > self.get_tip_block_number() - QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE as u32
     }
     fn get_index_for_block_unchecked(&self, block_number: u32) -> usize {
-        (QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE + self.get_tip_internal_index() as usize - (self.get_tip_block_number() - block_number) as usize) % QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE
+        (QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE + self.get_tip_internal_index() as usize
+            - (self.get_tip_block_number() - block_number) as usize)
+            % QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE
     }
 
     pub fn get_record_if_exists(&self, block_number: u32) -> Option<BlockDataRecord> {
@@ -282,11 +352,15 @@ impl<const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize> BlockDataTracker<QDOGE_BRI
     pub fn get_record(&self, block_number: u32) -> QDogeResult<BlockDataRecord> {
         if !self.contains_block(block_number) {
             return Err(DogeBridgeError::BlockNotInCache);
-        }else{
+        } else {
             Ok(self.records[self.get_index_for_block_unchecked(block_number)])
         }
     }
-    pub fn rollback_first(&mut self, last_good_block_number: u32, num_blocks_to_insert: usize) -> QDogeResult<()> {
+    pub fn rollback_first(
+        &mut self,
+        last_good_block_number: u32,
+        num_blocks_to_insert: usize,
+    ) -> QDogeResult<()> {
         if last_good_block_number == self.get_tip_block_number() {
             return Ok(());
         }
@@ -300,11 +374,19 @@ impl<const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize> BlockDataTracker<QDOGE_BRI
         if offset < num_blocks_to_insert {
             return Err(DogeBridgeError::InsufficientBlocksProvidedForRollback);
         }
-        self.tip_internal_index = (((self.get_tip_internal_index() as usize + QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE - offset as usize) % QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE) as u16).into();
+        self.tip_internal_index = (((self.get_tip_internal_index() as usize
+            + QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE
+            - offset as usize)
+            % QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE) as u16)
+            .into();
         self.tip_block_number = last_good_block_number.into();
         Ok(())
     }
-    pub fn rollback_insert(&mut self, last_good_block_number: u32, blocks: &[BlockDataRecord]) -> QDogeResult<()> {
+    pub fn rollback_insert(
+        &mut self,
+        last_good_block_number: u32,
+        blocks: &[BlockDataRecord],
+    ) -> QDogeResult<()> {
         self.rollback_first(last_good_block_number, blocks.len())?;
         for block in blocks {
             self.add_record(*block);
@@ -317,18 +399,20 @@ impl<const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize> BlockDataTracker<QDOGE_BRI
             return None;
         }
 
-        let index = (QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE + self.get_tip_internal_index() as usize - (self.get_tip_block_number() - block_number) as usize) % QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE;
+        let index = (QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE + self.get_tip_internal_index() as usize
+            - (self.get_tip_block_number() - block_number) as usize)
+            % QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE;
         Some(&self.records[index])
     }
-
 
     pub fn get_record_ref(&self, block_number: u32) -> QDogeResult<&BlockDataRecord> {
         if !self.contains_block(block_number) {
             return Err(DogeBridgeError::BlockNotInCache);
         }
 
-        let index = (QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE + self.get_tip_internal_index() as usize - (self.get_tip_block_number() - block_number) as usize) % QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE;
+        let index = (QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE + self.get_tip_internal_index() as usize
+            - (self.get_tip_block_number() - block_number) as usize)
+            % QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE;
         Ok(&self.records[index])
     }
 }
-

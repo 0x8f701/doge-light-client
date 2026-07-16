@@ -16,25 +16,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
 with contributions from Carter Feldman (https://x.com/cmpeq)."
 */
 
-
 use crate::hash::traits::MerkleHasher;
 
 use super::{delta_merkle_proof::DeltaMerkleProofCore, utils::compute_root_merkle_proof_generic};
 
-
-
-
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct MerkleProofCore<Hash: PartialEq + Copy> {
     pub root: Hash,
@@ -44,12 +49,18 @@ pub struct MerkleProofCore<Hash: PartialEq + Copy> {
     pub siblings: Vec<Hash>,
 }
 
-
-
-
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct MerkleProofCorePartial<Hash: PartialEq + Copy> {
     pub value: Hash,
@@ -128,8 +139,6 @@ impl<Hash: PartialEq + Copy> MerkleProofCore<Hash> {
     }
 }
 
-
-
 impl<Hash: PartialEq + Copy + Default> Default for MerkleProofCorePartial<Hash> {
     fn default() -> Self {
         Self {
@@ -140,13 +149,8 @@ impl<Hash: PartialEq + Copy + Default> Default for MerkleProofCorePartial<Hash> 
     }
 }
 
-
 impl<Hash: PartialEq + Copy> MerkleProofCorePartial<Hash> {
-    pub fn new_from_params(
-        index: u64,
-        value: Hash,
-        siblings: Vec<Hash>,
-    ) -> Self {
+    pub fn new_from_params(index: u64, value: Hash, siblings: Vec<Hash>) -> Self {
         Self {
             value,
             index,
@@ -154,7 +158,11 @@ impl<Hash: PartialEq + Copy> MerkleProofCorePartial<Hash> {
         }
     }
     pub fn to_full<Hasher: MerkleHasher<Hash>>(&self) -> MerkleProofCore<Hash> {
-        let root = compute_root_merkle_proof_generic::<Hash, Hasher>(self.value, self.index, &self.siblings);
+        let root = compute_root_merkle_proof_generic::<Hash, Hasher>(
+            self.value,
+            self.index,
+            &self.siblings,
+        );
         MerkleProofCore {
             root,
             value: self.value,
@@ -163,7 +171,11 @@ impl<Hash: PartialEq + Copy> MerkleProofCorePartial<Hash> {
         }
     }
     pub fn into_full<Hasher: MerkleHasher<Hash>>(self) -> MerkleProofCore<Hash> {
-        let root = compute_root_merkle_proof_generic::<Hash, Hasher>(self.value, self.index, &self.siblings);
+        let root = compute_root_merkle_proof_generic::<Hash, Hasher>(
+            self.value,
+            self.index,
+            &self.siblings,
+        );
         MerkleProofCore {
             root,
             value: self.value,

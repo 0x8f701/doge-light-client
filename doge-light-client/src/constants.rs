@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -64,7 +64,6 @@ const DOGE_MAINNET_PARAMS: DogeNetworkParams = DogeNetworkParams {
     aux_pow_chain_id: 0x0062,
     strict_chain_id: true,
     min_valid_height: 371339,
-
 };
 
 pub trait DogeNetworkConfig {
@@ -116,7 +115,6 @@ impl DogeNetworkConfig for DogeRegTestConfig {
     const START_ADDRESS_STRING_CHAR: char = 'm';
     const START_ADDRESS_STRING_BYTE: u8 = 0x6D;
 }
-
 
 //pub const DOGE_NETWORK_PARAMS: DogeNetworkParams = DOGE_MAINNET_PARAMS;
 

@@ -1,10 +1,10 @@
-use doge_light_client::common_types::QHash256;
 use crate::utils::append_only_merkle_tree::AppendOnlyMerkleTreeFixed;
+use doge_light_client::common_types::QHash256;
 
 pub struct BitVectorAppendOnlyMerkleTreeFixed<const HEIGHT: usize> {
     pub pending_leaf: [u8; 32],
     // pending_byte_bits stores bits for the current byte. Index 0 is LSB, 7 is MSB.
-    pub pending_byte_bits: [u8; 8], 
+    pub pending_byte_bits: [u8; 8],
     pub next_bit_index: usize,
     pub next_byte_index_in_pending_leaf: usize,
     // Tracks the absolute position of the next bit to be written
@@ -34,7 +34,7 @@ impl<const HEIGHT: usize> BitVectorAppendOnlyMerkleTreeFixed<HEIGHT> {
         // we append. Note: If completely empty, this appends a zero leaf.
         // We check if we actually have data pending or if this is called explicitly.
         // For the purpose of "skipping", we treat the current leaf as finished.
-        
+
         let leaf_hash: QHash256 = self.pending_leaf.into();
         self.tree.append_leaf(&leaf_hash);
 
@@ -43,7 +43,7 @@ impl<const HEIGHT: usize> BitVectorAppendOnlyMerkleTreeFixed<HEIGHT> {
         self.pending_byte_bits = [0u8; 8];
         self.next_byte_index_in_pending_leaf = 0;
         self.next_bit_index = 0;
-        
+
         // We align the global index to the start of the next leaf
         // This calculates the start of the next 256-bit block based on the tree's count.
         self.next_global_bit_index = self.tree.next_index * 256;
@@ -61,10 +61,10 @@ impl<const HEIGHT: usize> BitVectorAppendOnlyMerkleTreeFixed<HEIGHT> {
                     byte |= 1 << i;
                 }
             }
-            
+
             self.pending_leaf[self.next_byte_index_in_pending_leaf] = byte;
             self.next_byte_index_in_pending_leaf += 1;
-            
+
             // Reset bits
             self.pending_byte_bits = [0u8; 8];
             self.next_bit_index = 0;
@@ -79,7 +79,7 @@ impl<const HEIGHT: usize> BitVectorAppendOnlyMerkleTreeFixed<HEIGHT> {
     pub fn inc_bit_index(&mut self) {
         self.next_bit_index += 1;
         self.next_global_bit_index += 1;
-        
+
         if self.next_bit_index == 8 {
             self.finalize_byte();
         }
@@ -87,13 +87,14 @@ impl<const HEIGHT: usize> BitVectorAppendOnlyMerkleTreeFixed<HEIGHT> {
 
     pub fn set_true_bit_at(&mut self, global_bit_index: u32) {
         assert!(
-            global_bit_index >= self.next_global_bit_index, 
-            "Cannot set bit at index {} because current index is {}", 
-            global_bit_index, self.next_global_bit_index
+            global_bit_index >= self.next_global_bit_index,
+            "Cannot set bit at index {} because current index is {}",
+            global_bit_index,
+            self.next_global_bit_index
         );
 
         // 1. Check for Leaf Transition
-        // If the new bit belongs to a future leaf, we must finalize the current one 
+        // If the new bit belongs to a future leaf, we must finalize the current one
         // and skip any empty leaves in between.
         let current_leaf_idx = self.next_global_bit_index / 256;
         let target_leaf_idx = global_bit_index / 256;
@@ -101,11 +102,11 @@ impl<const HEIGHT: usize> BitVectorAppendOnlyMerkleTreeFixed<HEIGHT> {
         if target_leaf_idx > current_leaf_idx {
             // We must flush the current leaf (even if partial) to the tree
             self.finalize_leaf();
-            
+
             // Skip empty leaves if the gap is large (e.g., jump from leaf 0 to leaf 5)
             // This function handles inserting zero-hashes for the skipped indices.
             self.tree.skip_to_index_efficient(target_leaf_idx);
-            
+
             // Update global index to the start of the new leaf
             self.next_global_bit_index = target_leaf_idx * 256;
         }
@@ -114,24 +115,24 @@ impl<const HEIGHT: usize> BitVectorAppendOnlyMerkleTreeFixed<HEIGHT> {
         // We might be jumping from bit 0 to bit 16 inside the same leaf.
         // We need to flush the current byte if we are moving past it.
         let target_byte_idx = (global_bit_index % 256) / 8;
-        
+
         // If we jumped over bytes, flush the current partial byte
         if (target_byte_idx as usize) > self.next_byte_index_in_pending_leaf {
-             self.finalize_byte();
-             // Implicitly, the bytes between the old index and new index in `pending_leaf`
-             // are already 0 (from initialization), so we just update the pointer.
-             self.next_byte_index_in_pending_leaf = target_byte_idx as usize;
+            self.finalize_byte();
+            // Implicitly, the bytes between the old index and new index in `pending_leaf`
+            // are already 0 (from initialization), so we just update the pointer.
+            self.next_byte_index_in_pending_leaf = target_byte_idx as usize;
         }
 
         // 3. Set the bit
         // We update the local bit index based on the target
         self.next_bit_index = (global_bit_index % 8) as usize;
-        
+
         // Ensure our global tracker matches exactly where we are writing
         self.next_global_bit_index = global_bit_index;
 
         self.pending_byte_bits[self.next_bit_index] = 1u8;
-        
+
         // 4. Advance
         self.inc_bit_index();
     }
@@ -145,7 +146,7 @@ impl<const HEIGHT: usize> BitVectorAppendOnlyMerkleTreeFixed<HEIGHT> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_sequential_bits() {
         const HEIGHT: usize = 5;
@@ -180,11 +181,11 @@ mod tests {
 
         // This triggers finalize_byte inside set_true_bit_at (via inc_bit_index)
         // 0x01 | 0x80 = 0x81 = 129
-        
+
         // Manually flush to check buffer
-        bv.finalize_leaf(); 
-        
-        // We can't easily peek into the tree's hash history without a getter, 
+        bv.finalize_leaf();
+
+        // We can't easily peek into the tree's hash history without a getter,
         // but we can verify the indices progressed.
         assert_eq!(bv.tree.next_index, 1);
         assert_eq!(bv.next_global_bit_index, 256);
@@ -197,7 +198,7 @@ mod tests {
 
         // Set bit 0 (Byte 0)
         bv.set_true_bit_at(0);
-        
+
         // Set bit 16 (Byte 2, bit 0)
         // Byte 1 should be skipped (0x00)
         bv.set_true_bit_at(16);
@@ -207,7 +208,7 @@ mod tests {
         assert_eq!(bv.pending_byte_bits[0], 1); // Bit 0 of Byte 2 is set
 
         bv.finalize_leaf();
-        
+
         // Tree index should increment
         assert_eq!(bv.tree.next_index, 1);
     }
@@ -219,7 +220,7 @@ mod tests {
 
         // Set last bit of first leaf
         bv.set_true_bit_at(255);
-        
+
         // At this point, set_true_bit calls inc_bit_index -> finalize_byte -> finalize_leaf
         // because we hit the end of the 32nd byte.
         assert_eq!(bv.tree.next_index, 1);
@@ -227,7 +228,7 @@ mod tests {
 
         // Set first bit of next leaf
         bv.set_true_bit_at(256);
-        
+
         // Should be working on second leaf
         assert_eq!(bv.tree.next_index, 1); // Not committed yet
         assert_eq!(bv.next_global_bit_index, 257);
@@ -239,7 +240,7 @@ mod tests {
         let mut bv = BitVectorAppendOnlyMerkleTreeFixed::<HEIGHT>::new_from_empty();
 
         bv.set_true_bit_at(0);
-        
+
         // Skip Leaf 0 (rest of it) and Leaf 1 entirely. Start writing in Leaf 2.
         // Index 512 is the start of Leaf 2 (256 * 2).
         bv.set_true_bit_at(512);
@@ -249,7 +250,7 @@ mod tests {
         // Currently building Leaf 2 (next_index still 2 until flushed)
         assert_eq!(bv.tree.next_index, 2);
         assert_eq!(bv.next_global_bit_index, 513);
-        
+
         bv.finalize_leaf();
         assert_eq!(bv.tree.next_index, 3);
     }

@@ -18,7 +18,8 @@ impl TxBitBufferBuilder {
         }
     }
     pub fn append_output(&mut self, transaction_index: u32, output_in_tx_index: u32) {
-        self.outputs.push(transaction_index * TXO_TREE_MAX_OUTPUTS_PER_TX as u32 + output_in_tx_index);
+        self.outputs
+            .push(transaction_index * TXO_TREE_MAX_OUTPUTS_PER_TX as u32 + output_in_tx_index);
     }
     pub fn get_hash(&self) -> QHash256 {
         hash_impl_sha256_bytes(&bytemuck::cast_slice(&self.outputs))

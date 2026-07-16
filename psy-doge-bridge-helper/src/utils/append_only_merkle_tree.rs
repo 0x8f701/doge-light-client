@@ -1,4 +1,6 @@
-use doge_light_client::{common_types::QHash256, hash::sha256_impl::hash_impl_sha256_two_to_one_bytes};
+use doge_light_client::{
+    common_types::QHash256, hash::sha256_impl::hash_impl_sha256_two_to_one_bytes,
+};
 
 use crate::utils::sha256_zero_hashes::SHA256_ZERO_HASHES;
 
@@ -12,7 +14,7 @@ pub struct AppendOnlyMerkleTreeFixed<const HEIGHT: usize, const LEAF_HEIGHT: usi
 // Append Only Merkle Tree Builder for Auto Claim Deposits Tree
 impl<const HEIGHT: usize, const LEAF_HEIGHT: usize> AppendOnlyMerkleTreeFixed<HEIGHT, LEAF_HEIGHT> {
     pub fn new_from_empty() -> Self {
-        let siblings = core::array::from_fn(|i| SHA256_ZERO_HASHES[LEAF_HEIGHT+ i]);
+        let siblings = core::array::from_fn(|i| SHA256_ZERO_HASHES[LEAF_HEIGHT + i]);
         Self {
             start_root: SHA256_ZERO_HASHES[LEAF_HEIGHT + HEIGHT],
             current_root: SHA256_ZERO_HASHES[LEAF_HEIGHT + HEIGHT],
@@ -30,14 +32,16 @@ impl<const HEIGHT: usize, const LEAF_HEIGHT: usize> AppendOnlyMerkleTreeFixed<HE
         if last_index == 0 && is_last_value_empty {
             return Ok(Self::new_from_empty());
         } else if is_last_value_empty {
-            return Err(anyhow::anyhow!("Last value cannot be empty if last index is not zero"));
+            return Err(anyhow::anyhow!(
+                "Last value cannot be empty if last index is not zero"
+            ));
         }
         if last_siblings.len() != HEIGHT {
             return Err(anyhow::anyhow!("Invalid siblings length"));
         }
 
         let mut current = *last_value;
-        let mut next_siblings = core::array::from_fn(|i| SHA256_ZERO_HASHES[i+LEAF_HEIGHT]);
+        let mut next_siblings = core::array::from_fn(|i| SHA256_ZERO_HASHES[i + LEAF_HEIGHT]);
         let mut index = last_index;
 
         for (i, sibling) in last_siblings.iter().enumerate() {
@@ -50,8 +54,8 @@ impl<const HEIGHT: usize, const LEAF_HEIGHT: usize> AppendOnlyMerkleTreeFixed<HE
             } else {
                 // Case: Right Child
                 // We are on the right. The provided `sibling` is the Left Child.
-                // That Left Child is the one that was waiting on the frontier. 
-                // We must restore it to `next_siblings` because the next index to be added 
+                // That Left Child is the one that was waiting on the frontier.
+                // We must restore it to `next_siblings` because the next index to be added
                 // might still be within this subtree (e.g., 14->15 sharing same parents at L1, L2).
                 next_siblings[i] = *sibling;
                 current = hash_impl_sha256_two_to_one_bytes(sibling, &current);
@@ -78,18 +82,21 @@ impl<const HEIGHT: usize, const LEAF_HEIGHT: usize> AppendOnlyMerkleTreeFixed<HE
                 // Left Child:
                 // Store self as the waiting sibling for the future Right Child.
                 self.next_siblings[i] = current;
-                
+
                 // Hash with Zero to compute the temporary root for this state
-                current = hash_impl_sha256_two_to_one_bytes(&current, &SHA256_ZERO_HASHES[i + LEAF_HEIGHT]);
+                current = hash_impl_sha256_two_to_one_bytes(
+                    &current,
+                    &SHA256_ZERO_HASHES[i + LEAF_HEIGHT],
+                );
             } else {
                 // Right Child:
                 // Retrieve the waiting Left Child
                 let left = self.next_siblings[i];
-                
+
                 // Merge
                 current = hash_impl_sha256_two_to_one_bytes(&left, &current);
-                
-                // (Optional) We could clear self.next_siblings[i] here, but it will 
+
+                // (Optional) We could clear self.next_siblings[i] here, but it will
                 // just be overwritten when the next Left Child at this level appears.
             }
             index /= 2;
@@ -112,7 +119,7 @@ impl<const HEIGHT: usize, const LEAF_HEIGHT: usize> AppendOnlyMerkleTreeFixed<HE
             let old_bit = (old_index >> i) & 1;
             let new_bit = (new_next_index >> i) & 1;
 
-            // If we were on the right in the old path, we need the sibling to compute 
+            // If we were on the right in the old path, we need the sibling to compute
             // the root path for the old index (bubbling up `current_hash`).
             // We must read this before potentially overwriting it below.
             let old_sibling_if_needed = if old_bit == 1 {
@@ -147,17 +154,21 @@ impl<const HEIGHT: usize, const LEAF_HEIGHT: usize> AppendOnlyMerkleTreeFixed<HE
                     self.next_siblings[i] = SHA256_ZERO_HASHES[i + LEAF_HEIGHT];
                 }
             }
-            // If new_bit == 0, we are on a Left child. `next_siblings[i]` is strictly for 
-            // storage when waiting for a Right child. We can leave it as garbage or old data 
+            // If new_bit == 0, we are on a Left child. `next_siblings[i]` is strictly for
+            // storage when waiting for a Right child. We can leave it as garbage or old data
             // because `append_leaf` will overwrite it before reading.
 
             // Bubble up `current_hash` to the next level (simulating the path of `old_index`)
             if old_bit == 0 {
                 // Old path was Left: Merge with Zero (since we are skipping/padding)
-                current_hash = hash_impl_sha256_two_to_one_bytes(&current_hash, &SHA256_ZERO_HASHES[i + LEAF_HEIGHT]);
+                current_hash = hash_impl_sha256_two_to_one_bytes(
+                    &current_hash,
+                    &SHA256_ZERO_HASHES[i + LEAF_HEIGHT],
+                );
             } else {
                 // Old path was Right: Merge with the saved sibling
-                current_hash = hash_impl_sha256_two_to_one_bytes(&old_sibling_if_needed, &current_hash);
+                current_hash =
+                    hash_impl_sha256_two_to_one_bytes(&old_sibling_if_needed, &current_hash);
             }
         }
 
@@ -275,9 +286,7 @@ mod tests {
         let siblings = naive_path(&leaves, last_index as usize, HEIGHT);
 
         let mut rebuilt = AppendOnlyMerkleTreeFixed::<HEIGHT, 0>::new_from_siblings(
-            &siblings,
-            last_index,
-            &last_leaf,
+            &siblings, last_index, &last_leaf,
         )
         .expect("builder reconstruction");
 
@@ -302,10 +311,7 @@ mod tests {
     fn empty_builder_matches_zero_root() {
         const HEIGHT: usize = 12;
         let builder = AppendOnlyMerkleTreeFixed::<HEIGHT, 0>::new_from_empty();
-        assert_eq!(
-            builder.current_root,
-            SHA256_ZERO_HASHES[HEIGHT]
-        );
+        assert_eq!(builder.current_root, SHA256_ZERO_HASHES[HEIGHT]);
         assert_eq!(builder.next_index, 0);
     }
 }

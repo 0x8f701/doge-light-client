@@ -1,5 +1,14 @@
 use doge_light_client::{
-    chain_state::QEDDogeChainStateCore, common_types::{QHash160, QHash256}, doge::transaction::BTCTransaction, hash::{merkle::in_memory::{compute_dogecoin_block_transaction_merkle_proof_tree_root_in_memory, compute_sha256_merkle_root_in_memory}, sha256::btc_hash256_bytes}
+    chain_state::QEDDogeChainStateCore,
+    common_types::{QHash160, QHash256},
+    doge::transaction::BTCTransaction,
+    hash::{
+        merkle::in_memory::{
+            compute_dogecoin_block_transaction_merkle_proof_tree_root_in_memory,
+            compute_sha256_merkle_root_in_memory,
+        },
+        sha256::btc_hash256_bytes,
+    },
 };
 
 use crate::{
@@ -10,7 +19,6 @@ use crate::{
 //fn verify_merkle_proof_in_mem
 const MIN_POSSIBLE_TX_SIZE: usize = 60;
 const MAX_REASONABLE_TX_SIZE: usize = 1024 * 1024 * 10;
-
 
 pub const fn get_user_claimed_combined_index(
     block_number: u32,
@@ -87,33 +95,47 @@ impl UserClaimStateProofV1 {
             claim_tree_siblings[i].copy_from_slice(&bytes[offset..offset + 32]);
             offset += 32;
         }
-        Ok((UserClaimStateProofV1 {
-            tx_in_block_proof,
-            old_claimed_bit_vector,
-            claim_tree_siblings,
-        }, offset))
+        Ok((
+            UserClaimStateProofV1 {
+                tx_in_block_proof,
+                old_claimed_bit_vector,
+                claim_tree_siblings,
+            },
+            offset,
+        ))
     }
 
-    pub fn verify_tx_out_in_block_is_deposit_v1_with_ibc<'a, 
-    const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize,
-    const QDOGE_BRIDGE_BLOCK_TREE_HEIGHT: usize,>(
+    pub fn verify_tx_out_in_block_is_deposit_v1_with_ibc<
+        'a,
+        const QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE: usize,
+        const QDOGE_BRIDGE_BLOCK_TREE_HEIGHT: usize,
+    >(
         solana_public_key: &[u8; 32],
         bridge_public_key_hash: &[u8; 20],
         block_number: u32,
         tx_index: u32,
         output_index: u32,
         required_confirmations: u32,
-        ibc: &QEDDogeChainStateCore<QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE, QDOGE_BRIDGE_BLOCK_TREE_HEIGHT>,
+        ibc: &QEDDogeChainStateCore<
+            QDOGE_BRIDGE_BLOCK_HASH_CACHE_SIZE,
+            QDOGE_BRIDGE_BLOCK_TREE_HEIGHT,
+        >,
         known_user_claim_merkle_hash: &QHash256,
         data: &'a [u8],
     ) -> QClaimDogeResult<(QHash256, u64)> {
-        if ibc.block_data_tracker.get_finalized_block_number(required_confirmations) < block_number {
+        if ibc
+            .block_data_tracker
+            .get_finalized_block_number(required_confirmations)
+            < block_number
+        {
             return Err(ClaimDogeBridgeHelperError::BlockNotFinalized);
         }
 
-        let known_block_tx_merkle_root = ibc.block_data_tracker.get_record(block_number).map_err(|_| {
-            ClaimDogeBridgeHelperError::BlockNotInCache
-        })?.tx_tree_merkle_root;
+        let known_block_tx_merkle_root = ibc
+            .block_data_tracker
+            .get_record(block_number)
+            .map_err(|_| ClaimDogeBridgeHelperError::BlockNotInCache)?
+            .tx_tree_merkle_root;
 
         let (new_user_claim_merkle_hash, amount) = Self::verify_tx_out_in_block_is_deposit_v1(
             solana_public_key,
@@ -126,7 +148,6 @@ impl UserClaimStateProofV1 {
             data,
         )?;
         Ok((new_user_claim_merkle_hash, amount))
-        
     }
 
     pub fn verify_tx_out_in_block_is_deposit_v1<'a>(
@@ -139,8 +160,11 @@ impl UserClaimStateProofV1 {
         known_user_claim_merkle_hash: &QHash256,
         data: &'a [u8],
     ) -> QClaimDogeResult<(QHash256, u64)> {
-        let (_, tx_bytes, read_length) =
-            TransactionInBlockProofV1::get_proof_tx_in_block(data, tx_index, known_block_tx_merkle_root)?;
+        let (_, tx_bytes, read_length) = TransactionInBlockProofV1::get_proof_tx_in_block(
+            data,
+            tx_index,
+            known_block_tx_merkle_root,
+        )?;
         let amount = TransactionInBlockProofV1::check_is_deposit_address_v1_mem(
             tx_bytes,
             output_index as usize,
@@ -200,12 +224,8 @@ pub struct TransactionInBlockProofV1 {
     pub transaction: BTCTransaction,
 }
 
-
 impl TransactionInBlockProofV1 {
-    pub fn new(
-        merkle_proof_siblings: Vec<QHash256>,
-        transaction: BTCTransaction,
-    ) -> Self {
+    pub fn new(merkle_proof_siblings: Vec<QHash256>, transaction: BTCTransaction) -> Self {
         TransactionInBlockProofV1 {
             merkle_proof_siblings,
             transaction,
@@ -244,10 +264,13 @@ impl TransactionInBlockProofV1 {
         let transaction = BTCTransaction::from_bytes(&bytes[offset..offset + tx_len])?;
         offset += tx_len;
 
-        Ok((TransactionInBlockProofV1 {
-            merkle_proof_siblings,
-            transaction,
-        }, offset))
+        Ok((
+            TransactionInBlockProofV1 {
+                merkle_proof_siblings,
+                transaction,
+            },
+            offset,
+        ))
     }
 
     // returns the (tx_hash, tx_bytes, read_length)
@@ -283,15 +306,15 @@ impl TransactionInBlockProofV1 {
             return Err(ClaimDogeBridgeHelperError::InvalidTransactionProofV1Blob);
         }
 
-        let tx_hash =
-            btc_hash256_bytes(&data[tx_start..tx_start + tx_size]);
+        let tx_hash = btc_hash256_bytes(&data[tx_start..tx_start + tx_size]);
 
-        let computed_tx_merkle_root = compute_dogecoin_block_transaction_merkle_proof_tree_root_in_memory(
-            tx_hash,
-            &data[siblings_start..tx_size_start],
-            index_in_block,
-            siblings_len as usize,
-        );
+        let computed_tx_merkle_root =
+            compute_dogecoin_block_transaction_merkle_proof_tree_root_in_memory(
+                tx_hash,
+                &data[siblings_start..tx_size_start],
+                index_in_block,
+                siblings_len as usize,
+            );
         if computed_tx_merkle_root.is_none() {
             return Err(ClaimDogeBridgeHelperError::MismatchedTxMerkleRoots);
         }

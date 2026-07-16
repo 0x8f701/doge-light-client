@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -33,7 +33,6 @@ use psy_doge_data_link::link_common::hex_helpers::{hex_array_32, hex_array_80};
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 
-
 #[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 struct SolanaDogeIBCBlockItem {
@@ -48,7 +47,6 @@ struct SolanaDogeIBCBlockItem {
 }
 
 fn main() {
-
     let mut fetcher = BlockHeaderFetcher::new(DogeLinkElectrsClient::new(
         "https://doge-electrs-demo.qed.me".to_string(),
         DogeNetworkType::MainNet,
@@ -88,5 +86,8 @@ fn main() {
         }
     }
 
-    println!("results:\n{}", serde_json::to_string_pretty(&results).unwrap());
+    println!(
+        "results:\n{}",
+        serde_json::to_string_pretty(&results).unwrap()
+    );
 }

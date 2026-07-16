@@ -16,16 +16,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
 with contributions from Carter Feldman (https://x.com/cmpeq)."
 */
 
-use psy_doge_data_link::link_sync::{block_header_cache::BlockHeaderFetcher, electrs_link::DogeLinkElectrsClient};
 use doge_light_client::network_params::DogeNetworkType;
+use psy_doge_data_link::link_sync::{
+    block_header_cache::BlockHeaderFetcher, electrs_link::DogeLinkElectrsClient,
+};
 use serde::{Deserialize, Serialize};
 
 use psy_doge_data_link::link_common::hex_helpers::{hex_array_32, hex_array_80};
@@ -37,7 +39,6 @@ struct DogeScryptBlockHeader {
     #[serde(with = "hex_array_32")]
     pub scrypt_hash: [u8; 32],
 }
-
 
 fn run_get_block_hashes(
     start_block: u32,
@@ -57,7 +58,7 @@ fn run_get_block_hashes(
     for c in chunks {
         let blocks = cache.get_block_headers(c)?;
         for block in blocks {
-            let auxpow= block.aux_pow.unwrap();
+            let auxpow = block.aux_pow.unwrap();
             let header = DogeScryptBlockHeader {
                 block_header: auxpow.parent_block.to_bytes_fixed(),
                 scrypt_hash: auxpow.parent_block.get_pow_hash(),

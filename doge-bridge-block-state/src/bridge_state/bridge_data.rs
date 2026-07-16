@@ -16,14 +16,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://Psy.xyz)
 with contributions from Carter Feldman (https://x.com/cmpeq)."
 */
 
+use doge_light_client::hash::sha256_impl::hash_impl_sha256_bytes;
 #[cfg(feature = "solprogram")]
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
@@ -37,11 +38,9 @@ use solana_program::{
     system_instruction,
     sysvar::Sysvar,
 };
-use doge_light_client::hash::sha256_impl::hash_impl_sha256_bytes;
 
 #[cfg(not(feature = "solprogram"))]
 use crate::utils::program_error::{ProgramError, ProgramResult};
-
 
 // ============================================================================
 // Constants & Structs
@@ -53,10 +52,22 @@ const MAX_PENDING_MINTS_PER_GROUP_U16: u16 = MAX_PENDING_MINTS_PER_GROUP as u16;
 #[cfg(feature = "solprogram")]
 const MAX_PERMITTED_DATA_INCREASE: usize = 10_240;
 
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
-#[cfg_attr(feature = "serialize_bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
+#[cfg_attr(
+    feature = "serialize_bytemuck",
+    derive(bytemuck::Pod, bytemuck::Zeroable)
+)]
 #[derive(PartialEq, Clone, Debug, Eq, Ord, PartialOrd, Copy, Hash, Default)]
 #[repr(C)]
 pub struct PendingMint {
@@ -66,10 +77,22 @@ pub struct PendingMint {
 const PENDING_MINT_SIZE: usize = std::mem::size_of::<PendingMint>();
 const _RUN_TIME_ASSERT_PENDING_MINT_SIZE: () = assert!(PENDING_MINT_SIZE == 40);
 
-#[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
-#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
-#[cfg_attr(feature = "serialize_bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
+#[cfg_attr(
+    feature = "serialize_serde",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
+#[cfg_attr(
+    feature = "serialize_speedy",
+    derive(speedy::Readable, speedy::Writable)
+)]
+#[cfg_attr(
+    feature = "serialize_bytemuck",
+    derive(bytemuck::Pod, bytemuck::Zeroable)
+)]
 #[derive(PartialEq, Clone, Debug, Eq, Ord, PartialOrd, Copy, Hash, Default)]
 #[repr(C)]
 pub struct DataContractStateHeader {

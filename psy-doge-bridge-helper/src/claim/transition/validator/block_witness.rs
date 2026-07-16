@@ -1,4 +1,4 @@
-use doge_light_client::common_types::{QHash160, QHash256};
+use doge_light_client::common_types::QHash256;
 
 use crate::claim::{
     auto_claim_deposits_tree::constants::AUTO_CLAIM_DEPOSITS_TREE_HEIGHT,
@@ -8,6 +8,7 @@ use crate::claim::{
         validator::tx_witness::PsyBridgeClaimBlockTransactionWitness,
     },
 };
+use crate::tx_template::CustodyScriptConfig;
 
 #[cfg_attr(
     feature = "serialize_serde",
@@ -83,7 +84,6 @@ pub struct PsyBridgeClaimBlockWitness {
     pub deposit_transactions: Vec<PsyBridgeClaimBlockTransactionWitness>,
 }
 
-
 impl PsyBridgeClaimBlockWitness {
     pub fn new(
         header: PsyBridgeClaimBlockWitnessHeader,
@@ -101,7 +101,7 @@ impl PsyBridgeClaimBlockWitness {
         self,
         block_height: u32,
         block_transaction_tree_merkle_root: QHash256,
-        bridge_public_key_hash: QHash160,
+        custody_script_config: CustodyScriptConfig,
         flat_fee_per_deposit_sats: u64,
         deposit_fee_rate_numerator: u64,
         deposit_fee_rate_denominator: u64,
@@ -114,7 +114,7 @@ impl PsyBridgeClaimBlockWitness {
             &self.header.last_auto_claimed_deposits_siblings,
             self.header.claim_deposits_last_index,
             &self.header.claim_deposits_last_value,
-            &bridge_public_key_hash,
+            &custody_script_config,
             self.deposit_solana_public_keys,
         )?;
         for deposit in self.deposit_transactions {
@@ -128,10 +128,10 @@ impl PsyBridgeClaimBlockWitness {
             block_height,
             self.header.claim_deposits_last_index,
             &self.header.claim_deposits_last_value,
-                flat_fee_per_deposit_sats,
-                deposit_fee_rate_numerator,
-                deposit_fee_rate_denominator,
-                &self.header.txo_tree_block_siblings,
+            flat_fee_per_deposit_sats,
+            deposit_fee_rate_numerator,
+            deposit_fee_rate_denominator,
+            &self.header.txo_tree_block_siblings,
         )
     }
 }

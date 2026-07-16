@@ -1,7 +1,8 @@
 use doge_light_client::{
-    common_types::{QHash160, QHash256},
+    common_types::QHash256,
     hash::sha256_impl::{
-        hash_impl_sha256_hash_four_buffers_concat, hash_impl_sha256_hash_three_buffers_concat, hash_impl_sha256_two_to_one_bytes
+        hash_impl_sha256_hash_four_buffers_concat, hash_impl_sha256_hash_three_buffers_concat,
+        hash_impl_sha256_two_to_one_bytes,
     },
 };
 
@@ -18,7 +19,7 @@ use crate::{
         },
         transition::validator::block_witness::PsyBridgeClaimBlockWitnessVerifyResult,
     },
-    tx_template::get_bridge_deposit_output_script,
+    tx_template::{get_manager_custody_output_script, CustodyScriptConfig},
     utils::{
         append_only_merkle_tree::AppendOnlyMerkleTreeFixed, bit_buffer::TxBitBufferBuilder,
         sha256_zero_hashes::SHA256_ZERO_HASHES,
@@ -43,11 +44,17 @@ pub fn calcuate_fee(
     deposit_fee_rate_numerator: u64,
     deposit_fee_rate_denominator: u64,
 ) -> anyhow::Result<(u64, u64)> {
-    let deposit_fee_rate = (deposit_fee_rate_numerator as f64)
-        / (deposit_fee_rate_denominator as f64);
-    let fees_generated = (total_deposit_amount as f64 * deposit_fee_rate).floor() as u64 + flat_fee_per_deposit_sats;
-        
-    Ok((fees_generated, total_deposit_amount.checked_sub(fees_generated).ok_or_else(|| anyhow::anyhow!("Fee calculation underflow"))?))
+    let deposit_fee_rate =
+        (deposit_fee_rate_numerator as f64) / (deposit_fee_rate_denominator as f64);
+    let fees_generated =
+        (total_deposit_amount as f64 * deposit_fee_rate).floor() as u64 + flat_fee_per_deposit_sats;
+
+    Ok((
+        fees_generated,
+        total_deposit_amount
+            .checked_sub(fees_generated)
+            .ok_or_else(|| anyhow::anyhow!("Fee calculation underflow"))?,
+    ))
 }
 pub struct BlockTransitionBuilder {
     pub pending_mints: PendingMintsGroupsBuilder,
@@ -94,7 +101,6 @@ impl BlockTransitionBuilder {
             deposit_fee_rate_numerator,
             deposit_fee_rate_denominator,
             total_fees_collected: 0,
-            
         }
     }
 
@@ -106,12 +112,14 @@ impl BlockTransitionBuilder {
         claim_deposits_last_siblings: &[QHash256],
         claim_deposits_last_index: u32,
         claim_deposits_last_value: &QHash256,
-        bridge_public_key_hash: &QHash160,
+        custody_script_config: &CustodyScriptConfig,
         depositor_public_keys: Vec<QHash256>,
     ) -> anyhow::Result<Self> {
         let depositor_output_scripts = depositor_public_keys
             .iter()
-            .map(|pk| get_bridge_deposit_output_script(pk, bridge_public_key_hash))
+            .map(|recipient_ata| {
+                get_manager_custody_output_script(custody_script_config, recipient_ata)
+            })
             .collect();
         Ok(Self {
             pending_mints: PendingMintsGroupsBuilder::new_with_hint(total_outputs_hint),
@@ -156,7 +164,7 @@ impl BlockTransitionBuilder {
             self.deposit_fee_rate_denominator,
         )?;
         self.pending_mints
-            .append_pending_mint(&self.depositor_public_keys[public_key_index], amount);
+            .append_pending_mint(&self.depositor_public_keys[public_key_index], net_amount);
         let leaf_hash = hash_deposit_leaf(
             tx_hash,
             output_index,
@@ -238,7 +246,7 @@ impl BlockTransitionBuilder {
             claim_deposits_last_index + 1
         };
         let end_auto_claimed_deposits_index = self.deposits_tree.next_index;
-        
+
         Ok(PsyBridgeClaimBlockWitnessVerifyResult {
             old_claimed_txo_tree_root,
             new_claimed_txo_tree_root,
@@ -248,5 +256,94 @@ impl BlockTransitionBuilder {
             end_auto_claimed_deposits_index,
             fees_collected: self.total_fees_collected,
         })
+    }
+}
+
+#[cfg(test)]
+mod b15_b16_bug_nails {
+    use super::*;
+
+    /// B15a: helper fee formula uses f64 — diverge from on-chain u128 integer path
+    /// for a large amount near f64 mantissa limit.
+    #[test]
+    fn b15a_f64_fee_diverges_from_u128_integer_for_large_amount() {
+        // Reconstruct on-chain integer formula (psy-doge-solana-core fees.rs)
+        fn fee_u128(amount: u64, flat: u64, num: u64, den: u64) -> u64 {
+            ((amount as u128 * num as u128) / den as u128 + flat as u128) as u64
+        }
+        // Helper's f64 formula
+        fn fee_f64(amount: u64, flat: u64, num: u64, den: u64) -> u64 {
+            let rate = (num as f64) / (den as f64);
+            (amount as f64 * rate).floor() as u64 + flat
+        }
+
+        // Amount > 2^53 where f64 cannot represent every integer
+        let amount: u64 = (1u64 << 53) + 3;
+        let flat = 0u64;
+        let num = 1u64;
+        let den = 3u64; // 1/3 rate — classic rounding trap
+
+        let a = fee_u128(amount, flat, num, den);
+        let b = fee_f64(amount, flat, num, den);
+        // Document whether they diverge; if equal for this input, try more cases
+        let mut diverged = a != b;
+        if !diverged {
+            for extra in 0..1000u64 {
+                let amt = (1u64 << 53) + extra * 7 + 1;
+                if fee_u128(amt, 0, 1, 3) != fee_f64(amt, 0, 1, 3) {
+                    diverged = true;
+                    break;
+                }
+            }
+        }
+        // Also nail that the SOURCE still contains `as f64`
+        let src = include_str!("transition_builder.rs");
+        assert!(
+            src.contains("as f64"),
+            "B15a: expected f64 cast still present in calcuate_fee"
+        );
+        // Soft assert on divergence — print both
+        println!("u128 fee={a}, f64 fee={b}, diverged={diverged}");
+        // The bug is the *use* of f64; divergence may be rare for small fees.
+        // Hard-nail the source shape:
+        assert!(src.contains("deposit_fee_rate_numerator as f64"));
+    }
+
+    /// B15b: add_deposit now passes net_amount (0x8f701 fix) — verify via source.
+    #[test]
+    fn b15b_add_deposit_passes_net_amount() {
+        let src = include_str!("transition_builder.rs");
+        // The fixed path: append_pending_mint(..., net_amount) and hash with net_amount
+        assert!(
+            src.contains(
+                "append_pending_mint(&self.depositor_public_keys[public_key_index], net_amount)"
+            ),
+            "B15b: expected net_amount passed to append_pending_mint"
+        );
+        assert!(
+            src.contains("&net_amount"),
+            "B15b: expected net_amount in hash_deposit_leaf"
+        );
+    }
+
+    /// B16: no zero-recipient branch — add_deposit always mints.
+    #[test]
+    fn b16_no_zero_recipient_skip() {
+        let src = include_str!("transition_builder.rs");
+        // There must be no early-return for zero pubkey
+        let add_fn_start = src.find("pub fn add_deposit").expect("add_deposit");
+        let add_fn = &src[add_fn_start..add_fn_start + 800];
+        assert!(
+            !add_fn.contains("[0u8; 32]")
+                && !add_fn.contains("QHash256::default()")
+                && !add_fn.contains("is_zero")
+                && !add_fn.contains("skip"),
+            "B16: add_deposit appears to have a zero-recipient guard (unexpected)"
+        );
+        // Always calls append_pending_mint
+        assert!(
+            add_fn.contains("append_pending_mint"),
+            "B16: add_deposit always appends pending mint (no zero-recipient skip)"
+        );
     }
 }

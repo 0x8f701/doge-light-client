@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional terms under GNU AGPL version 3 section 7:
 
-As permitted by section 7(b) of the GNU Affero General Public License, 
-you must retain the following attribution notice in all copies or 
+As permitted by section 7(b) of the GNU Affero General Public License,
+you must retain the following attribution notice in all copies or
 substantial portions of the software:
 
 "This software was created by Psy Protocol (https://psy.xyz)
@@ -26,21 +26,19 @@ with contributions from Carter Feldman (https://x.com/cmpeq)."
 
 use crate::hash::traits::MerkleHasher;
 
-
 pub fn compute_root_merkle_proof_generic<Hash: PartialEq + Copy, H: MerkleHasher<Hash>>(
     value: Hash,
     index: u64,
-    siblings: &[Hash]
+    siblings: &[Hash],
 ) -> Hash {
     let mut current = value;
     let mut ind_tracker = index;
     for sibling in siblings.iter() {
-        current = H::two_to_one_swap((ind_tracker & 1) == 1,&current, sibling);
+        current = H::two_to_one_swap((ind_tracker & 1) == 1, &current, sibling);
         ind_tracker >>= 1;
     }
     current
 }
-
 
 pub fn compute_partial_merkle_root_from_leaves<
     Hash: PartialEq + Copy,
