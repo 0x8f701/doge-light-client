@@ -19,7 +19,7 @@ use crate::{
         },
         transition::validator::block_witness::PsyBridgeClaimBlockWitnessVerifyResult,
     },
-    tx_template::{get_manager_custody_output_script, CustodyScriptConfig},
+    tx_template::{get_manager_custody_output_script, CustodyScriptConfig, ManagerCustodyProfile},
     utils::{
         append_only_merkle_tree::AppendOnlyMerkleTreeFixed, bit_buffer::TxBitBufferBuilder,
         sha256_zero_hashes::SHA256_ZERO_HASHES,
@@ -104,7 +104,7 @@ impl BlockTransitionBuilder {
         }
     }
 
-    pub fn new_from_siblings(
+    pub fn new_from_siblings<P: ManagerCustodyProfile>(
         total_outputs_hint: usize,
         flat_fee_per_deposit_sats: u64,
         deposit_fee_rate_numerator: u64,
@@ -118,7 +118,7 @@ impl BlockTransitionBuilder {
         let depositor_output_scripts = depositor_public_keys
             .iter()
             .map(|recipient_ata| {
-                get_manager_custody_output_script(custody_script_config, recipient_ata)
+                get_manager_custody_output_script::<P>(custody_script_config, recipient_ata)
             })
             .collect();
         Ok(Self {

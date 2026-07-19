@@ -53,20 +53,115 @@ pub const SOLANA_WORMHOLE_CHAIN_ID: u16 = 1;
 pub const MANAGER_CUSTODY_THRESHOLD: u8 = 5;
 pub const MANAGER_CUSTODY_KEY_COUNT: usize = 7;
 pub const MANAGER_CUSTODY_REDEEM_SCRIPT_SIZE: usize = 312;
-pub const MANAGER_CUSTODY_CONFIG_ID: u32 = 0;
-pub const MANAGER_CUSTODY_NETWORK_TYPE: u16 = 0;
 pub const MANAGER_CUSTODY_WALLET_CONFIG_SIZE: usize = 264;
 
-pub const MANAGER_CUSTODY_PUBLIC_KEYS: [[u8; 33]; MANAGER_CUSTODY_KEY_COUNT] = [
-    [0x02, 0x79, 0xbe, 0x66, 0x7e, 0xf9, 0xdc, 0xbb, 0xac, 0x55, 0xa0, 0x62, 0x95, 0xce, 0x87, 0x0b, 0x07, 0x02, 0x9b, 0xfc, 0xdb, 0x2d, 0xce, 0x28, 0xd9, 0x59, 0xf2, 0x81, 0x5b, 0x16, 0xf8, 0x17, 0x98],
-    [0x02, 0xc6, 0x04, 0x7f, 0x94, 0x41, 0xed, 0x7d, 0x6d, 0x30, 0x45, 0x40, 0x6e, 0x95, 0xc0, 0x7c, 0xd8, 0x5c, 0x77, 0x8e, 0x4b, 0x8c, 0xef, 0x3c, 0xa7, 0xab, 0xac, 0x09, 0xb9, 0x5c, 0x70, 0x9e, 0xe5],
-    [0x02, 0xf9, 0x30, 0x8a, 0x01, 0x92, 0x58, 0xc3, 0x10, 0x49, 0x34, 0x4f, 0x85, 0xf8, 0x9d, 0x52, 0x29, 0xb5, 0x31, 0xc8, 0x45, 0x83, 0x6f, 0x99, 0xb0, 0x86, 0x01, 0xf1, 0x13, 0xbc, 0xe0, 0x36, 0xf9],
-    [0x02, 0xe4, 0x93, 0xdb, 0xf1, 0xc1, 0x0d, 0x80, 0xf3, 0x58, 0x1e, 0x49, 0x04, 0x93, 0x0b, 0x14, 0x04, 0xcc, 0x6c, 0x13, 0x90, 0x0e, 0xe0, 0x75, 0x84, 0x74, 0xfa, 0x94, 0xab, 0xe8, 0xc4, 0xcd, 0x13],
-    [0x02, 0x2f, 0x8b, 0xde, 0x4d, 0x1a, 0x07, 0x20, 0x93, 0x55, 0xb4, 0xa7, 0x25, 0x0a, 0x5c, 0x51, 0x28, 0xe8, 0x8b, 0x84, 0xbd, 0xdc, 0x61, 0x9a, 0xb7, 0xcb, 0xa8, 0xd5, 0x69, 0xb2, 0x40, 0xef, 0xe4],
-    [0x03, 0xff, 0xf9, 0x7b, 0xd5, 0x75, 0x5e, 0xee, 0xa4, 0x20, 0x45, 0x3a, 0x14, 0x35, 0x52, 0x35, 0xd3, 0x82, 0xf6, 0x47, 0x2f, 0x85, 0x68, 0xa1, 0x8b, 0x2f, 0x05, 0x7a, 0x14, 0x60, 0x29, 0x75, 0x56],
-    [0x02, 0x5c, 0xbd, 0xf0, 0x64, 0x6e, 0x5d, 0xb4, 0xea, 0xa3, 0x98, 0xf3, 0x65, 0xf2, 0xea, 0x7a, 0x0e, 0x3d, 0x41, 0x9b, 0x7e, 0x03, 0x30, 0xe3, 0x9c, 0xe9, 0x2b, 0xdd, 0xed, 0xca, 0xc4, 0xf9, 0xbc],
-];
+/// Compile-time manager custody profile selected at the network boundary.
+///
+/// `LocalRegtestManagerCustody` is the localhost fixture (config_id 0).
+/// `OfficialTestnetManagerCustody` is official Wormhole testnet manager set 1
+/// (config_id 1). Both share the 5-of-7 threshold and network_type 0.
+pub trait ManagerCustodyProfile: Sized {
+    const CONFIG_ID: u32;
+    const NETWORK_TYPE: u16;
+    const THRESHOLD: u8 = MANAGER_CUSTODY_THRESHOLD;
+    const KEY_COUNT: usize = MANAGER_CUSTODY_KEY_COUNT;
+    const PUBLIC_KEYS: [[u8; 33]; MANAGER_CUSTODY_KEY_COUNT];
+}
 
+/// Localhost regtest manager fixture: scalar-derived keys, config_id 0, network_type 0.
+pub struct LocalRegtestManagerCustody;
+
+impl ManagerCustodyProfile for LocalRegtestManagerCustody {
+    const CONFIG_ID: u32 = 0;
+    const NETWORK_TYPE: u16 = 0;
+    const PUBLIC_KEYS: [[u8; 33]; MANAGER_CUSTODY_KEY_COUNT] = [
+        [
+            0x02, 0x79, 0xbe, 0x66, 0x7e, 0xf9, 0xdc, 0xbb, 0xac, 0x55, 0xa0, 0x62, 0x95, 0xce,
+            0x87, 0x0b, 0x07, 0x02, 0x9b, 0xfc, 0xdb, 0x2d, 0xce, 0x28, 0xd9, 0x59, 0xf2, 0x81,
+            0x5b, 0x16, 0xf8, 0x17, 0x98,
+        ],
+        [
+            0x02, 0xc6, 0x04, 0x7f, 0x94, 0x41, 0xed, 0x7d, 0x6d, 0x30, 0x45, 0x40, 0x6e, 0x95,
+            0xc0, 0x7c, 0xd8, 0x5c, 0x77, 0x8e, 0x4b, 0x8c, 0xef, 0x3c, 0xa7, 0xab, 0xac, 0x09,
+            0xb9, 0x5c, 0x70, 0x9e, 0xe5,
+        ],
+        [
+            0x02, 0xf9, 0x30, 0x8a, 0x01, 0x92, 0x58, 0xc3, 0x10, 0x49, 0x34, 0x4f, 0x85, 0xf8,
+            0x9d, 0x52, 0x29, 0xb5, 0x31, 0xc8, 0x45, 0x83, 0x6f, 0x99, 0xb0, 0x86, 0x01, 0xf1,
+            0x13, 0xbc, 0xe0, 0x36, 0xf9,
+        ],
+        [
+            0x02, 0xe4, 0x93, 0xdb, 0xf1, 0xc1, 0x0d, 0x80, 0xf3, 0x58, 0x1e, 0x49, 0x04, 0x93,
+            0x0b, 0x14, 0x04, 0xcc, 0x6c, 0x13, 0x90, 0x0e, 0xe0, 0x75, 0x84, 0x74, 0xfa, 0x94,
+            0xab, 0xe8, 0xc4, 0xcd, 0x13,
+        ],
+        [
+            0x02, 0x2f, 0x8b, 0xde, 0x4d, 0x1a, 0x07, 0x20, 0x93, 0x55, 0xb4, 0xa7, 0x25, 0x0a,
+            0x5c, 0x51, 0x28, 0xe8, 0x8b, 0x84, 0xbd, 0xdc, 0x61, 0x9a, 0xb7, 0xcb, 0xa8, 0xd5,
+            0x69, 0xb2, 0x40, 0xef, 0xe4,
+        ],
+        [
+            0x03, 0xff, 0xf9, 0x7b, 0xd5, 0x75, 0x5e, 0xee, 0xa4, 0x20, 0x45, 0x3a, 0x14, 0x35,
+            0x52, 0x35, 0xd3, 0x82, 0xf6, 0x47, 0x2f, 0x85, 0x68, 0xa1, 0x8b, 0x2f, 0x05, 0x7a,
+            0x14, 0x60, 0x29, 0x75, 0x56,
+        ],
+        [
+            0x02, 0x5c, 0xbd, 0xf0, 0x64, 0x6e, 0x5d, 0xb4, 0xea, 0xa3, 0x98, 0xf3, 0x65, 0xf2,
+            0xea, 0x7a, 0x0e, 0x3d, 0x41, 0x9b, 0x7e, 0x03, 0x30, 0xe3, 0x9c, 0xe9, 0x2b, 0xdd,
+            0xed, 0xca, 0xc4, 0xf9, 0xbc,
+        ],
+    ];
+}
+
+/// Official Wormhole testnet Manager set 1: config_id 1, network_type 0.
+pub struct OfficialTestnetManagerCustody;
+
+impl ManagerCustodyProfile for OfficialTestnetManagerCustody {
+    const CONFIG_ID: u32 = 1;
+    const NETWORK_TYPE: u16 = 0;
+    const PUBLIC_KEYS: [[u8; 33]; MANAGER_CUSTODY_KEY_COUNT] = [
+        [
+            0x02, 0x34, 0x9d, 0xe5, 0x6c, 0xa5, 0xdd, 0x06, 0xdb, 0x86, 0x60, 0x41, 0x9d, 0x6f,
+            0x15, 0x06, 0x62, 0xe0, 0xf0, 0x4f, 0xeb, 0xdb, 0xf6, 0x51, 0x2d, 0x7c, 0xfe, 0x78,
+            0xc2, 0x3b, 0x51, 0x49, 0x1c,
+        ],
+        [
+            0x03, 0x51, 0x63, 0xbf, 0xd9, 0x51, 0x8b, 0x0a, 0x53, 0x6a, 0x17, 0xf3, 0x30, 0xa1,
+            0x58, 0x9f, 0xe2, 0x1d, 0x74, 0x04, 0xb5, 0x1f, 0x52, 0x5a, 0x0a, 0x99, 0x0a, 0x65,
+            0xa7, 0x01, 0x95, 0x2e, 0xbb,
+        ],
+        [
+            0x03, 0x6d, 0x40, 0xb0, 0xb8, 0x5b, 0xca, 0x49, 0xe4, 0x1f, 0x05, 0xa2, 0x69, 0x50,
+            0x57, 0x8b, 0xb1, 0x3a, 0x42, 0x45, 0x07, 0xce, 0x34, 0xa8, 0x0f, 0x83, 0xd3, 0xcf,
+            0x60, 0x1e, 0x25, 0x81, 0x8b,
+        ],
+        [
+            0x03, 0x07, 0x68, 0x10, 0x02, 0xae, 0x28, 0xb9, 0x39, 0x9e, 0x82, 0x8d, 0x0f, 0x46,
+            0xd5, 0x4c, 0x31, 0xd5, 0xd6, 0xff, 0x18, 0x7b, 0x3b, 0xdd, 0xdc, 0x66, 0x15, 0x98,
+            0x7a, 0x46, 0x64, 0x55, 0xf5,
+        ],
+        [
+            0x03, 0x75, 0xab, 0xc8, 0x95, 0x5c, 0x8a, 0x8c, 0x87, 0x5e, 0xe1, 0xfe, 0xbd, 0x15,
+            0x71, 0x32, 0xad, 0xcc, 0x1b, 0x99, 0x2d, 0x69, 0xa9, 0x46, 0xe8, 0x34, 0x85, 0xb8,
+            0x36, 0x0e, 0x23, 0xa2, 0x77,
+        ],
+        [
+            0x03, 0x02, 0x12, 0xd2, 0x06, 0x54, 0x62, 0x16, 0x91, 0x7a, 0x75, 0x53, 0x3e, 0xd6,
+            0xc9, 0x75, 0xf8, 0xf7, 0x94, 0xba, 0x0d, 0x8a, 0x7f, 0xb8, 0x4d, 0xed, 0xf6, 0x5e,
+            0xbb, 0x20, 0xe6, 0x48, 0x41,
+        ],
+        [
+            0x03, 0x7f, 0xf4, 0x83, 0x36, 0x9b, 0x52, 0xbd, 0x87, 0xa7, 0x3f, 0x23, 0x41, 0x3d,
+            0xd8, 0xfc, 0xac, 0xe7, 0x1d, 0xe7, 0xf7, 0x82, 0x3c, 0x5c, 0x91, 0x20, 0xf1, 0xe9,
+            0xcf, 0xe5, 0x73, 0x3a, 0x88,
+        ],
+    ];
+}
+
+/// Emitter-only custody script configuration (32 wire bytes).
+///
+/// Manager keys / config id / network type come from an explicit
+/// [`ManagerCustodyProfile`] generic on hash and script helpers.
 #[cfg_attr(feature = "serialize_serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serialize_borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
@@ -86,12 +181,12 @@ impl CustodyScriptConfig {
         self.emitter_bridge_pda
     }
 
-    pub fn hash(&self) -> QHash256 {
+    pub fn hash<P: ManagerCustodyProfile>(&self) -> QHash256 {
         let mut wallet_config = [0u8; MANAGER_CUSTODY_WALLET_CONFIG_SIZE];
         wallet_config[..32].copy_from_slice(&self.emitter_bridge_pda);
 
         let mut y_parity = 0u16;
-        for (index, compressed_public_key) in MANAGER_CUSTODY_PUBLIC_KEYS.iter().enumerate() {
+        for (index, compressed_public_key) in P::PUBLIC_KEYS.iter().enumerate() {
             let key_offset = 32 + index * 32;
             wallet_config[key_offset..key_offset + 32]
                 .copy_from_slice(&compressed_public_key[1..]);
@@ -99,27 +194,35 @@ impl CustodyScriptConfig {
                 y_parity |= 1 << index;
             }
         }
-        wallet_config[256..260].copy_from_slice(&MANAGER_CUSTODY_CONFIG_ID.to_le_bytes());
+        wallet_config[256..260].copy_from_slice(&P::CONFIG_ID.to_le_bytes());
         wallet_config[260..262].copy_from_slice(&y_parity.to_le_bytes());
-        wallet_config[262..264].copy_from_slice(&MANAGER_CUSTODY_NETWORK_TYPE.to_le_bytes());
+        wallet_config[262..264].copy_from_slice(&P::NETWORK_TYPE.to_le_bytes());
 
         hash_impl_sha256_bytes(&wallet_config)
     }
 
-    pub fn try_from_manager_set(
+    pub fn try_from_manager_set<P: ManagerCustodyProfile>(
         emitter_bridge_pda: [u8; 32],
         threshold: u8,
         public_keys: &[[u8; 33]],
+        config_id: u32,
     ) -> anyhow::Result<Self> {
-        if threshold != MANAGER_CUSTODY_THRESHOLD {
+        if threshold != P::THRESHOLD {
             anyhow::bail!(
                 "Custody manager threshold mismatch: expected {}, got {}",
-                MANAGER_CUSTODY_THRESHOLD,
+                P::THRESHOLD,
                 threshold
             );
         }
-        if public_keys != MANAGER_CUSTODY_PUBLIC_KEYS {
-            anyhow::bail!("Custody manager public keys do not match the canonical manager set");
+        if config_id != P::CONFIG_ID {
+            anyhow::bail!(
+                "Custody manager config id mismatch: expected {}, got {}",
+                P::CONFIG_ID,
+                config_id
+            );
+        }
+        if public_keys != P::PUBLIC_KEYS {
+            anyhow::bail!("Custody manager public keys do not match the selected manager profile");
         }
         Ok(Self::new(emitter_bridge_pda))
     }
@@ -171,7 +274,7 @@ pub fn get_bridge_deposit_output_script(
     ))
 }
 
-pub fn get_manager_custody_redeem_script(
+pub fn get_manager_custody_redeem_script<P: ManagerCustodyProfile>(
     custody_script_config: &CustodyScriptConfig,
     recipient_ata: &[u8; 32],
 ) -> [u8; MANAGER_CUSTODY_REDEEM_SCRIPT_SIZE] {
@@ -194,15 +297,15 @@ pub fn get_manager_custody_redeem_script(
     offset += 32;
     script[offset] = OP_DROP;
     offset += 1;
-    script[offset] = 0x50 + MANAGER_CUSTODY_THRESHOLD;
+    script[offset] = 0x50 + P::THRESHOLD;
     offset += 1;
-    for public_key in MANAGER_CUSTODY_PUBLIC_KEYS {
+    for public_key in P::PUBLIC_KEYS {
         script[offset] = OP_PUSHBYTES_33;
         offset += 1;
         script[offset..offset + 33].copy_from_slice(&public_key);
         offset += 33;
     }
-    script[offset] = 0x50 + MANAGER_CUSTODY_KEY_COUNT as u8;
+    script[offset] = 0x50 + P::KEY_COUNT as u8;
     offset += 1;
     script[offset] = OP_CHECKMULTISIG;
     offset += 1;
@@ -211,32 +314,33 @@ pub fn get_manager_custody_redeem_script(
     script
 }
 
-pub fn get_manager_custody_address_hash(
+pub fn get_manager_custody_address_hash<P: ManagerCustodyProfile>(
     custody_script_config: &CustodyScriptConfig,
     recipient_ata: &[u8; 32],
 ) -> [u8; 20] {
-    QBTCHash160Hasher::hash_bytes(&get_manager_custody_redeem_script(
+    QBTCHash160Hasher::hash_bytes(&get_manager_custody_redeem_script::<P>(
         custody_script_config,
         recipient_ata,
     ))
 }
 
-pub fn get_manager_custody_output_script(
+pub fn get_manager_custody_output_script<P: ManagerCustodyProfile>(
     custody_script_config: &CustodyScriptConfig,
     recipient_ata: &[u8; 32],
 ) -> [u8; 23] {
-    gen_p2sh_script(&get_manager_custody_address_hash(
+    gen_p2sh_script(&get_manager_custody_address_hash::<P>(
         custody_script_config,
         recipient_ata,
     ))
 }
 
-pub fn is_manager_custody_output_for_recipient(
+pub fn is_manager_custody_output_for_recipient<P: ManagerCustodyProfile>(
     output: &BTCTransactionOutput,
     custody_script_config: &CustodyScriptConfig,
     recipient_ata: &[u8; 32],
 ) -> bool {
-    output.script == get_manager_custody_output_script(custody_script_config, recipient_ata)
+    output.script
+        == get_manager_custody_output_script::<P>(custody_script_config, recipient_ata)
 }
 
 #[cfg(test)]
@@ -244,21 +348,23 @@ mod manager_custody_tests {
     use super::*;
     use speedy::Writable;
 
+    /// Bridge State emitter PDA used by the shared custody vectors.
     const BRIDGE_STATE_PDA: [u8; 32] = [
-        0x84, 0xb2, 0x67, 0xdd, 0x47, 0x47, 0x4d, 0xd7, 0xee, 0x3b, 0x7d, 0x7f, 0xb5, 0xb1,
-        0x0d, 0x86, 0x26, 0xbf, 0x52, 0xff, 0x8d, 0x2c, 0x82, 0x13, 0x57, 0x70, 0xfe, 0xad,
-        0x3a, 0x5a, 0xb1, 0xba,
+        0xf0, 0x27, 0x32, 0x70, 0x89, 0x65, 0xbb, 0x94, 0x73, 0x17, 0x74, 0x95, 0xe6, 0x08, 0x49,
+        0x6b, 0x0a, 0xf3, 0xbd, 0xbe, 0x5b, 0xd6, 0x2e, 0xc0, 0x62, 0xd8, 0xcd, 0xdb, 0x18, 0x24,
+        0xa8, 0x13,
     ];
     const RECIPIENT_ATA: [u8; 32] = [
-        0x54, 0x84, 0x4c, 0xc4, 0x57, 0x75, 0x70, 0x12, 0x29, 0xdb, 0x39, 0x99, 0x24, 0xa6,
-        0xce, 0x19, 0x20, 0xc3, 0x2e, 0xc2, 0xf0, 0x08, 0x2c, 0xfc, 0x64, 0x92, 0x3d, 0x44,
-        0x62, 0x4b, 0xe0, 0x14,
+        0x54, 0x84, 0x4c, 0xc4, 0x57, 0x75, 0x70, 0x12, 0x29, 0xdb, 0x39, 0x99, 0x24, 0xa6, 0xce,
+        0x19, 0x20, 0xc3, 0x2e, 0xc2, 0xf0, 0x08, 0x2c, 0xfc, 0x64, 0x92, 0x3d, 0x44, 0x62, 0x4b,
+        0xe0, 0x14,
     ];
 
     #[test]
     fn exact_manager_script_matches_deposit_to_solana_shape() {
         let config = CustodyScriptConfig::new(BRIDGE_STATE_PDA);
-        let script = get_manager_custody_redeem_script(&config, &RECIPIENT_ATA);
+        let script =
+            get_manager_custody_redeem_script::<LocalRegtestManagerCustody>(&config, &RECIPIENT_ATA);
 
         assert_eq!(script.len(), 312);
         assert_eq!(&script[..4], &[0x02, 0x00, 0x01, 0x20]);
@@ -268,67 +374,145 @@ mod manager_custody_tests {
         assert_eq!(&script[38..70], &RECIPIENT_ATA);
         assert_eq!(script[70], OP_DROP);
         assert_eq!(script[71], 0x55);
-        for (index, public_key) in MANAGER_CUSTODY_PUBLIC_KEYS.iter().enumerate() {
+        for (index, public_key) in LocalRegtestManagerCustody::PUBLIC_KEYS.iter().enumerate() {
             let offset = 72 + index * 34;
             assert_eq!(script[offset], OP_PUSHBYTES_33);
             assert_eq!(&script[offset + 1..offset + 34], public_key);
         }
         assert_eq!(&script[310..], &[0x57, OP_CHECKMULTISIG]);
         assert_eq!(
-            get_manager_custody_output_script(&config, &RECIPIENT_ATA),
-            hex_literal::hex!("a914bee8ec8e5af600ebf6758250245136955ef23a1987")
+            get_manager_custody_output_script::<LocalRegtestManagerCustody>(&config, &RECIPIENT_ATA),
+            gen_p2sh_script(&QBTCHash160Hasher::hash_bytes(&script))
+        );
+    }
+
+    #[test]
+    fn profile_key_selection_differs_while_emitter_wire_stays_32() {
+        let config = CustodyScriptConfig::new(BRIDGE_STATE_PDA);
+        assert_eq!(core::mem::size_of_val(&config), 32);
+        assert_eq!(core::mem::size_of::<CustodyScriptConfig>(), 32);
+        assert_eq!(config.to_preimage_bytes(), BRIDGE_STATE_PDA);
+        assert_eq!(borsh::to_vec(&config).unwrap(), BRIDGE_STATE_PDA.to_vec());
+        assert_eq!(config.write_to_vec().unwrap(), BRIDGE_STATE_PDA.to_vec());
+
+        let local =
+            get_manager_custody_redeem_script::<LocalRegtestManagerCustody>(&config, &RECIPIENT_ATA);
+        let official = get_manager_custody_redeem_script::<OfficialTestnetManagerCustody>(
+            &config,
+            &RECIPIENT_ATA,
+        );
+        assert_ne!(local, official);
+        assert_eq!(&local[4..36], &BRIDGE_STATE_PDA);
+        assert_eq!(&official[4..36], &BRIDGE_STATE_PDA);
+        assert_eq!(
+            &local[72 + 1..72 + 34],
+            &LocalRegtestManagerCustody::PUBLIC_KEYS[0]
         );
         assert_eq!(
-            get_manager_custody_output_script(&config, &RECIPIENT_ATA),
-            gen_p2sh_script(&QBTCHash160Hasher::hash_bytes(&script))
+            &official[72 + 1..72 + 34],
+            &OfficialTestnetManagerCustody::PUBLIC_KEYS[0]
+        );
+        assert_ne!(
+            get_manager_custody_output_script::<LocalRegtestManagerCustody>(&config, &RECIPIENT_ATA),
+            get_manager_custody_output_script::<OfficialTestnetManagerCustody>(
+                &config,
+                &RECIPIENT_ATA
+            )
         );
     }
 
     #[test]
     fn mutated_emitter_or_recipient_changes_output_script() {
         let config = CustodyScriptConfig::new(BRIDGE_STATE_PDA);
-        let expected = get_manager_custody_output_script(&config, &RECIPIENT_ATA);
+        let expected = get_manager_custody_output_script::<LocalRegtestManagerCustody>(
+            &config,
+            &RECIPIENT_ATA,
+        );
 
         let mut emitter = BRIDGE_STATE_PDA;
         emitter[0] ^= 1;
         assert_ne!(
-            get_manager_custody_output_script(&CustodyScriptConfig::new(emitter), &RECIPIENT_ATA),
+            get_manager_custody_output_script::<LocalRegtestManagerCustody>(
+                &CustodyScriptConfig::new(emitter),
+                &RECIPIENT_ATA
+            ),
             expected
         );
 
         let mut recipient = RECIPIENT_ATA;
         recipient[31] ^= 1;
-        assert_ne!(get_manager_custody_output_script(&config, &recipient), expected);
+        assert_ne!(
+            get_manager_custody_output_script::<LocalRegtestManagerCustody>(&config, &recipient),
+            expected
+        );
     }
 
     #[test]
-    fn mutated_key_or_threshold_is_rejected() {
-        let mut keys = MANAGER_CUSTODY_PUBLIC_KEYS;
+    fn mutated_key_threshold_or_config_id_is_rejected() {
+        let mut keys = LocalRegtestManagerCustody::PUBLIC_KEYS;
         keys[3][7] ^= 1;
-        assert!(CustodyScriptConfig::try_from_manager_set(
+        assert!(CustodyScriptConfig::try_from_manager_set::<LocalRegtestManagerCustody>(
             BRIDGE_STATE_PDA,
-            MANAGER_CUSTODY_THRESHOLD,
+            LocalRegtestManagerCustody::THRESHOLD,
             &keys,
+            LocalRegtestManagerCustody::CONFIG_ID,
         )
         .is_err());
-        assert!(CustodyScriptConfig::try_from_manager_set(
+        assert!(CustodyScriptConfig::try_from_manager_set::<LocalRegtestManagerCustody>(
             BRIDGE_STATE_PDA,
-            MANAGER_CUSTODY_THRESHOLD - 1,
-            &MANAGER_CUSTODY_PUBLIC_KEYS,
+            LocalRegtestManagerCustody::THRESHOLD - 1,
+            &LocalRegtestManagerCustody::PUBLIC_KEYS,
+            LocalRegtestManagerCustody::CONFIG_ID,
         )
         .is_err());
+        assert!(CustodyScriptConfig::try_from_manager_set::<LocalRegtestManagerCustody>(
+            BRIDGE_STATE_PDA,
+            LocalRegtestManagerCustody::THRESHOLD,
+            &LocalRegtestManagerCustody::PUBLIC_KEYS,
+            LocalRegtestManagerCustody::CONFIG_ID + 1,
+        )
+        .is_err());
+        assert!(CustodyScriptConfig::try_from_manager_set::<LocalRegtestManagerCustody>(
+            BRIDGE_STATE_PDA,
+            LocalRegtestManagerCustody::THRESHOLD,
+            &LocalRegtestManagerCustody::PUBLIC_KEYS,
+            LocalRegtestManagerCustody::CONFIG_ID,
+        )
+        .is_ok());
+        assert!(
+            CustodyScriptConfig::try_from_manager_set::<OfficialTestnetManagerCustody>(
+                BRIDGE_STATE_PDA,
+                OfficialTestnetManagerCustody::THRESHOLD,
+                &OfficialTestnetManagerCustody::PUBLIC_KEYS,
+                OfficialTestnetManagerCustody::CONFIG_ID,
+            )
+            .is_ok()
+        );
+        assert!(
+            CustodyScriptConfig::try_from_manager_set::<OfficialTestnetManagerCustody>(
+                BRIDGE_STATE_PDA,
+                OfficialTestnetManagerCustody::THRESHOLD,
+                &LocalRegtestManagerCustody::PUBLIC_KEYS,
+                OfficialTestnetManagerCustody::CONFIG_ID,
+            )
+            .is_err()
+        );
     }
 
     #[test]
-    fn config_preimage_and_hash_are_exact() {
+    fn config_preimage_and_profile_hashes_are_exact() {
         let config = CustodyScriptConfig::new(BRIDGE_STATE_PDA);
         assert_eq!(config.to_preimage_bytes(), BRIDGE_STATE_PDA);
         assert_eq!(
-            config.hash(),
-            hex_literal::hex!("afae9579f67ecff79ea3297a58a4c814a4582020abd4e6d3f5e3b19b46f1ab69")
+            config.hash::<LocalRegtestManagerCustody>(),
+            hex_literal::hex!("6b6c33fa023611fdd672361f9c198353580959ad34af813af69178d61ca955eb")
         );
-        assert_eq!(borsh::to_vec(&config).unwrap(), BRIDGE_STATE_PDA);
-        assert_eq!(config.write_to_vec().unwrap(), BRIDGE_STATE_PDA);
+        assert_eq!(
+            config.hash::<OfficialTestnetManagerCustody>(),
+            hex_literal::hex!("2621f9ac4de46226f85b48bcf2e20c87e6bb62ff946a9b12becb8c35a4e90ab0")
+        );
+        assert_eq!(borsh::to_vec(&config).unwrap(), BRIDGE_STATE_PDA.to_vec());
+        assert_eq!(config.write_to_vec().unwrap(), BRIDGE_STATE_PDA.to_vec());
     }
 }
 

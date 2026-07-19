@@ -10,7 +10,7 @@ use zerocopy::IntoBytes;
 
 use crate::{
     data::core::{PsyDogeBridgeIncomingBlockWitness, PsyDogeBridgeState},
-    tx_template::CustodyScriptConfig,
+    tx_template::{CustodyScriptConfig, ManagerCustodyProfile},
 };
 
 pub fn prover_guest_run_with_bytes(
@@ -34,7 +34,10 @@ pub fn prover_guest_run_with_bytes(
 
     Ok((witness, state))
 }
-pub fn prover_guest_verify_block_transition_bytes<NC: DogeNetworkConfig>(
+pub fn prover_guest_verify_block_transition_bytes<
+    NC: DogeNetworkConfig,
+    P: ManagerCustodyProfile,
+>(
     custody_script_config: CustodyScriptConfig,
     required_confirmations: u32,
     flat_fee_per_deposit_sats: u64,
@@ -43,7 +46,7 @@ pub fn prover_guest_verify_block_transition_bytes<NC: DogeNetworkConfig>(
     input_data: &[u8],
 ) -> anyhow::Result<QHash256> {
     let (witness, mut state) = prover_guest_run_with_bytes(input_data)?;
-    prover_guest_verify_block_transition::<NC>(
+    prover_guest_verify_block_transition::<NC, P>(
         custody_script_config,
         required_confirmations,
         witness,
@@ -53,7 +56,7 @@ pub fn prover_guest_verify_block_transition_bytes<NC: DogeNetworkConfig>(
         deposit_fee_rate_denominator,
     )
 }
-pub fn prover_guest_verify_block_transition<NC: DogeNetworkConfig>(
+pub fn prover_guest_verify_block_transition<NC: DogeNetworkConfig, P: ManagerCustodyProfile>(
     custody_script_config: CustodyScriptConfig,
     required_confirmations: u32,
     witness: PsyDogeBridgeIncomingBlockWitness,
@@ -97,7 +100,7 @@ pub fn prover_guest_verify_block_transition<NC: DogeNetworkConfig>(
     let expected_start_auto_claimed_deposits_index = latest.auto_claimed_deposits_next_index;
     let expected_start_claimed_txo_tree_root = latest.auto_claimed_txo_tree_root;
 
-    let result = witness.claim_witness.verify_and_get_result(
+    let result = witness.claim_witness.verify_and_get_result::<P>(
         block_number,
         witness.block_header.header.merkle_root,
         custody_script_config,
@@ -176,7 +179,10 @@ pub struct VerifiedBlockTransition {
 
 /// Like prover_guest_verify_block_transition but returns the individual verified
 /// header hashes and finalized state commitments, not just the combined transition hash.
-pub fn prover_guest_verify_block_transition_detailed<NC: DogeNetworkConfig>(
+pub fn prover_guest_verify_block_transition_detailed<
+    NC: DogeNetworkConfig,
+    P: ManagerCustodyProfile,
+>(
     custody_script_config: CustodyScriptConfig,
     required_confirmations: u32,
     witness: PsyDogeBridgeIncomingBlockWitness,
@@ -221,7 +227,7 @@ pub fn prover_guest_verify_block_transition_detailed<NC: DogeNetworkConfig>(
     let expected_start_auto_claimed_deposits_index = latest.auto_claimed_deposits_next_index;
     let expected_start_claimed_txo_tree_root = latest.auto_claimed_txo_tree_root;
 
-    let result = witness.claim_witness.verify_and_get_result(
+    let result = witness.claim_witness.verify_and_get_result::<P>(
         block_number,
         witness.block_header.header.merkle_root,
         custody_script_config,

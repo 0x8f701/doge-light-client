@@ -8,7 +8,7 @@ use crate::claim::{
         validator::tx_witness::PsyBridgeClaimBlockTransactionWitness,
     },
 };
-use crate::tx_template::CustodyScriptConfig;
+use crate::tx_template::{CustodyScriptConfig, ManagerCustodyProfile};
 
 #[cfg_attr(
     feature = "serialize_serde",
@@ -97,7 +97,7 @@ impl PsyBridgeClaimBlockWitness {
         }
     }
 
-    pub fn verify_and_get_result(
+    pub fn verify_and_get_result<P: ManagerCustodyProfile>(
         self,
         block_height: u32,
         block_transaction_tree_merkle_root: QHash256,
@@ -106,7 +106,7 @@ impl PsyBridgeClaimBlockWitness {
         deposit_fee_rate_numerator: u64,
         deposit_fee_rate_denominator: u64,
     ) -> anyhow::Result<PsyBridgeClaimBlockWitnessVerifyResult> {
-        let mut transition_builder = BlockTransitionBuilder::new_from_siblings(
+        let mut transition_builder = BlockTransitionBuilder::new_from_siblings::<P>(
             self.header.total_outputs_hint as usize,
             flat_fee_per_deposit_sats,
             deposit_fee_rate_numerator,

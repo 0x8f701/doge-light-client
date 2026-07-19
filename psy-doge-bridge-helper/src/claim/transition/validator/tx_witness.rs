@@ -136,17 +136,17 @@ mod manager_custody_validation_tests {
             transition::transition_builder::BlockTransitionBuilder,
         },
         tx_template::{
-            get_manager_custody_output_script, CustodyScriptConfig,
-            MANAGER_CUSTODY_PUBLIC_KEYS, MANAGER_CUSTODY_THRESHOLD,
+            get_manager_custody_output_script, CustodyScriptConfig, LocalRegtestManagerCustody,
+            ManagerCustodyProfile,
         },
         utils::sha256_zero_hashes::SHA256_ZERO_HASHES,
     };
     use doge_light_client::doge::transaction::BTCTransactionOutput;
 
     const BRIDGE_STATE_PDA: [u8; 32] = [
-        0x84, 0xb2, 0x67, 0xdd, 0x47, 0x47, 0x4d, 0xd7, 0xee, 0x3b, 0x7d, 0x7f, 0xb5, 0xb1,
-        0x0d, 0x86, 0x26, 0xbf, 0x52, 0xff, 0x8d, 0x2c, 0x82, 0x13, 0x57, 0x70, 0xfe, 0xad,
-        0x3a, 0x5a, 0xb1, 0xba,
+        0xf0, 0x27, 0x32, 0x70, 0x89, 0x65, 0xbb, 0x94, 0x73, 0x17, 0x74, 0x95, 0xe6, 0x08, 0x49,
+        0x6b, 0x0a, 0xf3, 0xbd, 0xbe, 0x5b, 0xd6, 0x2e, 0xc0, 0x62, 0xd8, 0xcd, 0xdb, 0x18, 0x24,
+        0xa8, 0x13,
     ];
     const RECIPIENT_ATA: [u8; 32] = [
         0x54, 0x84, 0x4c, 0xc4, 0x57, 0x75, 0x70, 0x12, 0x29, 0xdb, 0x39, 0x99, 0x24, 0xa6,
@@ -158,7 +158,7 @@ mod manager_custody_validation_tests {
         config: &CustodyScriptConfig,
         recipient_ata: [u8; 32],
     ) -> BlockTransitionBuilder {
-        BlockTransitionBuilder::new_from_siblings(
+        BlockTransitionBuilder::new_from_siblings::<LocalRegtestManagerCustody>(
             1,
             0,
             0,
@@ -194,7 +194,10 @@ mod manager_custody_validation_tests {
     #[test]
     fn validator_accepts_exact_manager_output_and_mints_to_ata() {
         let config = CustodyScriptConfig::new(BRIDGE_STATE_PDA);
-        let script = get_manager_custody_output_script(&config, &RECIPIENT_ATA);
+        let script = get_manager_custody_output_script::<LocalRegtestManagerCustody>(
+            &config,
+            &RECIPIENT_ATA,
+        );
         let witness = deposit_witness(script);
         let transaction_root = witness.transaction.get_hash();
         let mut builder = transition_builder(&config, RECIPIENT_ATA);
@@ -211,7 +214,10 @@ mod manager_custody_validation_tests {
     #[test]
     fn validator_rejects_mutated_emitter_or_recipient() {
         let config = CustodyScriptConfig::new(BRIDGE_STATE_PDA);
-        let expected = get_manager_custody_output_script(&config, &RECIPIENT_ATA);
+        let expected = get_manager_custody_output_script::<LocalRegtestManagerCustody>(
+            &config,
+            &RECIPIENT_ATA,
+        );
 
         let mut emitter = BRIDGE_STATE_PDA;
         emitter[0] ^= 1;
@@ -234,18 +240,27 @@ mod manager_custody_validation_tests {
 
     #[test]
     fn config_rejects_mutated_key_or_threshold_before_validation() {
-        let mut keys = MANAGER_CUSTODY_PUBLIC_KEYS;
+        let mut keys = LocalRegtestManagerCustody::PUBLIC_KEYS;
         keys[0][1] ^= 1;
-        assert!(CustodyScriptConfig::try_from_manager_set(
+        assert!(CustodyScriptConfig::try_from_manager_set::<LocalRegtestManagerCustody>(
             BRIDGE_STATE_PDA,
-            MANAGER_CUSTODY_THRESHOLD,
+            LocalRegtestManagerCustody::THRESHOLD,
             &keys,
+            LocalRegtestManagerCustody::CONFIG_ID,
         )
         .is_err());
-        assert!(CustodyScriptConfig::try_from_manager_set(
+        assert!(CustodyScriptConfig::try_from_manager_set::<LocalRegtestManagerCustody>(
             BRIDGE_STATE_PDA,
-            MANAGER_CUSTODY_THRESHOLD + 1,
-            &MANAGER_CUSTODY_PUBLIC_KEYS,
+            LocalRegtestManagerCustody::THRESHOLD + 1,
+            &LocalRegtestManagerCustody::PUBLIC_KEYS,
+            LocalRegtestManagerCustody::CONFIG_ID,
+        )
+        .is_err());
+        assert!(CustodyScriptConfig::try_from_manager_set::<LocalRegtestManagerCustody>(
+            BRIDGE_STATE_PDA,
+            LocalRegtestManagerCustody::THRESHOLD,
+            &LocalRegtestManagerCustody::PUBLIC_KEYS,
+            LocalRegtestManagerCustody::CONFIG_ID + 1,
         )
         .is_err());
     }
